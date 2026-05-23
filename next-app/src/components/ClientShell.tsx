@@ -99,7 +99,7 @@ function LayoutShell({ children }: { children: ReactNode }) {
       <Sidebar />
       <TopBar />
       <AuthGuard>
-        <main className="main-content">
+        <main className="main-content has-sidebar">
           {children}
           <footer className="app-footer">
             <img src="/jrt-logo.png" alt="JRT" className="app-footer-logo" />
