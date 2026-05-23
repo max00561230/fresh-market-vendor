@@ -6,10 +6,10 @@ import { PRODUCT_CATEGORIES, PRICING_TYPES, PricingType, Product, DAYS_OF_WEEK }
 import { wouldExceedLimit } from '@/lib/plan-limits';
 import Link from 'next/link';
 
-type AdminSection = 'menu' | 'profile' | 'products' | 'customers' | 'data';
+type AdminSection = 'menu' | 'profile' | 'products' | 'customers' | 'payments' | 'data';
 
 export default function AdminPage() {
-  const { data, updateVendor, addProduct, updateProduct, deleteProduct, updateData, changePin, addCustomer, removeCustomer, getCustomerPageUrl, setToast, isFree, showUpgrade } = useApp();
+  const { data, updateVendor, addProduct, updateProduct, deleteProduct, updateData, changePin, addCustomer, removeCustomer, getCustomerPageUrl, setToast, isFree, showUpgrade, stripeConnect, stripeRefresh, stripeDashboard, stripeTestCheckout, stripeLoading } = useApp();
   const { vendor, products, customers } = data;
   const [section, setSection] = useState<AdminSection>('menu');
 
@@ -153,6 +153,7 @@ export default function AdminPage() {
     { key: 'profile', label: 'Profile', emoji: '👤', desc: 'Farm name, address, hours' },
     { key: 'products', label: 'Products', emoji: '🥬', desc: `${products.length} products` },
     { key: 'customers', label: 'Customers', emoji: '👥', desc: `${customers.length} customers` },
+    { key: 'payments', label: 'Payments', emoji: '💳', desc: data.stripe.connected ? 'Connected' : 'Set up Stripe' },
     { key: 'data', label: 'Settings & Data', emoji: '💾', desc: 'PIN, export, reset' },
   ];
 
@@ -620,6 +621,102 @@ export default function AdminPage() {
               >
                 ✉️ Open Email Client
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Payments Section ─── */}
+      {section === 'payments' && (
+        <div className="space-y-4">
+          <div className="section-header">
+            <span className="emoji">💳</span>
+            <h2>Stripe Payments</h2>
+          </div>
+
+          {/* Connection Status Card */}
+          <div className="card">
+            <div className="card-header">Connection Status</div>
+            <div className="card-body space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={`inline-block h-3 w-3 rounded-full ${data.stripe.connected ? 'bg-green-500' : 'bg-red-400'}`} />
+                  <span className="text-sm font-semibold">
+                    {data.stripe.connected ? 'Connected' : 'Not Connected'}
+                  </span>
+                </div>
+                {data.stripe.connectedAccountId && (
+                  <span className="text-xs text-[var(--text-muted)] font-mono bg-[var(--border)] rounded px-2 py-1">
+                    {data.stripe.connectedAccountId}
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-2 bg-[var(--border)] rounded p-2">
+                  <span className={`h-2.5 w-2.5 rounded-full ${data.stripe.chargesEnabled ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  <span className="text-xs font-medium">Charges {data.stripe.chargesEnabled ? 'Enabled' : 'Disabled'}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-[var(--border)] rounded p-2">
+                  <span className={`h-2.5 w-2.5 rounded-full ${data.stripe.payoutsEnabled ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  <span className="text-xs font-medium">Payouts {data.stripe.payoutsEnabled ? 'Enabled' : 'Disabled'}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-[var(--border)] rounded p-2">
+                  <span className={`h-2.5 w-2.5 rounded-full ${data.stripe.detailsSubmitted ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  <span className="text-xs font-medium">Details {data.stripe.detailsSubmitted ? 'Submitted' : 'Pending'}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-[var(--border)] rounded p-2">
+                  <span className={`h-2.5 w-2.5 rounded-full ${!data.stripe.requirementsDue ? 'bg-green-500' : 'bg-red-400'}`} />
+                  <span className="text-xs font-medium">Requirements {data.stripe.requirementsDue ? 'Due' : 'Complete'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions Card */}
+          <div className="card">
+            <div className="card-header">Actions</div>
+            <div className="card-body">
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  className="btn btn-primary"
+                  onClick={stripeConnect}
+                  disabled={stripeLoading.connect}
+                >
+                  {stripeLoading.connect ? 'Connecting…' : '🔗 Connect Stripe'}
+                </button>
+                <button
+                  className="btn btn-outline"
+                  onClick={stripeRefresh}
+                  disabled={stripeLoading.refresh}
+                >
+                  {stripeLoading.refresh ? 'Refreshing…' : '🔄 Refresh Status'}
+                </button>
+                <button
+                  className="btn btn-outline"
+                  onClick={stripeDashboard}
+                  disabled={stripeLoading.dashboard || !data.stripe.connected}
+                >
+                  {stripeLoading.dashboard ? 'Opening…' : '📊 Open Dashboard'}
+                </button>
+                <button
+                  className="btn btn-outline"
+                  onClick={stripeTestCheckout}
+                  disabled={stripeLoading.test || !data.stripe.chargesEnabled}
+                >
+                  {stripeLoading.test ? 'Creating…' : '🧪 Test Checkout'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Security Notice */}
+          <div className="card" style={{ borderColor: 'var(--danger, #dc2626)', borderWidth: 1 }}>
+            <div className="card-body">
+              <p className="text-xs font-bold" style={{ color: 'var(--danger, #dc2626)' }}>🔒 Security Notice</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">
+                Do not collect bank account, routing number, CVV, or Stripe secret key. All sensitive payment data is handled securely through Stripe.
+              </p>
             </div>
           </div>
         </div>

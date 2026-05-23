@@ -20,6 +20,8 @@ export default function CartPage() {
   const [email, setEmail] = useState('');
   const [notes, setNotes] = useState('');
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
 
   if (orderPlaced) {
     return (
@@ -43,6 +45,49 @@ export default function CartPage() {
     );
   }
 
+  const handleStripeCheckout = async () => {
+    if (!name.trim() || cart.length === 0) return;
+    setCheckingOut(true);
+    setCheckoutError('');
+    try {
+      const baseUrl = window.location.origin;
+      const successUrl = `${baseUrl}/order-success`;
+      const cancelUrl = `${baseUrl}/order-cancel`;
+      const res = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vendorId: data.vendor.id || 'v1',
+          cartItems: cart.map(item => ({
+            id: item.product.id,
+            quantity: item.product.pricingType === 'per_pound' ? item.quantity : Math.round(item.quantity),
+            pricingType: item.product.pricingType,
+            pricePerUnit: item.product.pricePerUnit,
+            name: item.product.name,
+          })),
+          customerName: name.trim(),
+          customerPhone: phone.trim() || undefined,
+          customerEmail: email.trim() || undefined,
+          pickupDay: data.vendor.marketSchedules[0]?.marketName,
+          customerNotes: notes.trim() || undefined,
+          successUrl,
+          cancelUrl,
+          source: 'mobile',
+        }),
+      });
+      const resp = await res.json();
+      if (resp.ok && resp.url) {
+        window.location.href = resp.url;
+      } else {
+        setCheckoutError(resp.message || 'Unable to start checkout.');
+      }
+    } catch {
+      setCheckoutError('Failed to start checkout. Please try again.');
+    } finally {
+      setCheckingOut(false);
+    }
+  };
+
   const handleSubmit = () => {
     if (!name.trim()) return;
     // Free plan order limit check
@@ -50,15 +95,19 @@ export default function CartPage() {
       showUpgrade('orders');
       return;
     }
-    placeOrder({
-      name: name.trim(),
-      phone: phone.trim() || undefined,
-      email: email.trim() || undefined,
-      notes: notes.trim() || undefined,
-      paymentMethod,
-      source: 'mobile',
-    });
-    setOrderPlaced(true);
+    if (paymentMethod === 'card') {
+      handleStripeCheckout();
+    } else {
+      placeOrder({
+        name: name.trim(),
+        phone: phone.trim() || undefined,
+        email: email.trim() || undefined,
+        notes: notes.trim() || undefined,
+        paymentMethod,
+        source: 'mobile',
+      });
+      setOrderPlaced(true);
+    }
   };
 
   return (
@@ -173,6 +222,14 @@ export default function CartPage() {
               </button>
             </div>
           </div>
+          {checkoutError && (
+            <p className="text-sm text-[var(--danger)]">{checkoutError}</p>
+          )}
+          {paymentMethod === 'card' && (
+            <p className="text-xs text-[var(--text-muted)]">
+              💳 You'll be redirected to Stripe for secure payment processing.
+            </p>
+          )}
         </div>
       </div>
 
@@ -181,11 +238,11 @@ export default function CartPage() {
         <button className="btn btn-ghost flex-1" onClick={clearCart}>Clear Cart</button>
         <button
           className="btn btn-primary flex-1"
-          disabled={!name.trim()}
+          disabled={!name.trim() || checkingOut}
           onClick={handleSubmit}
-          style={!name.trim() ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+          style={!name.trim() || checkingOut ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
         >
-          Place Order · ${cartTotal.toFixed(2)}
+          {checkingOut ? 'Redirecting…' : `Place Order · $${cartTotal.toFixed(2)}`}
         </button>
       </div>
     </div>

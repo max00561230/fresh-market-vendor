@@ -23,6 +23,8 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [weightModal, setWeightModal] = useState<{ product: typeof products[0] | null; weight: string }>({ product: null, weight: '1.0' });
   const [saleComplete, setSaleComplete] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
 
   const handleProductClick = (product: typeof products[0]) => {
     if (!product.inStock) return;
@@ -41,19 +43,58 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleCompleteSale = () => {
+  const handleCompleteSale = async () => {
     if (cart.length === 0) return;
     // Free plan order limit check
     if (isFree && orders.length >= 3) {
       showUpgrade('orders');
       return;
     }
-    placeOrder({
-      name: 'Walk-in Customer',
-      paymentMethod,
-      source: 'in_person',
-    });
-    setSaleComplete(true);
+    if (paymentMethod === 'card') {
+      // Redirect to Stripe Checkout for card payments
+      setCheckingOut(true);
+      setCheckoutError('');
+      try {
+        const baseUrl = window.location.origin;
+        const successUrl = `${baseUrl}/order-success`;
+        const cancelUrl = `${baseUrl}/order-cancel`;
+        const res = await fetch('/api/stripe/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            vendorId: data.vendor.id || 'v1',
+            cartItems: cart.map(item => ({
+              id: item.product.id,
+              quantity: item.product.pricingType === 'per_pound' ? item.quantity : Math.round(item.quantity),
+              pricingType: item.product.pricingType,
+              pricePerUnit: item.product.pricePerUnit,
+              name: item.product.name,
+            })),
+            customerName: 'Walk-in Customer',
+            source: 'in_person',
+            successUrl,
+            cancelUrl,
+          }),
+        });
+        const resp = await res.json();
+        if (resp.ok && resp.url) {
+          window.location.href = resp.url;
+        } else {
+          setCheckoutError(resp.message || 'Unable to start checkout.');
+          setCheckingOut(false);
+        }
+      } catch {
+        setCheckoutError('Failed to start checkout.');
+        setCheckingOut(false);
+      }
+    } else {
+      placeOrder({
+        name: 'Walk-in Customer',
+        paymentMethod,
+        source: 'in_person',
+      });
+      setSaleComplete(true);
+    }
   };
 
   if (saleComplete) {
@@ -162,13 +203,17 @@ export default function CheckoutPage() {
           </div>
         </div>
 
+        {checkoutError && (
+          <p className="text-sm text-[var(--danger)]">{checkoutError}</p>
+        )}
+
         <button
           className="btn btn-primary w-full"
-          disabled={cart.length === 0}
+          disabled={cart.length === 0 || checkingOut}
           onClick={handleCompleteSale}
-          style={cart.length === 0 ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+          style={cart.length === 0 || checkingOut ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
         >
-          Complete Sale · ${cartTotal.toFixed(2)}
+          {checkingOut ? 'Redirecting…' : `Complete Sale · $${cartTotal.toFixed(2)}`}
         </button>
       </div>
 

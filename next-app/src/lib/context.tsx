@@ -7,6 +7,15 @@ import {
 import { DEMO_VENDOR, DEMO_PRODUCTS, DEMO_ORDERS } from "./db";
 import { PlanTier, PLAN_LIMITS, STORAGE_KEY_PLAN, wouldExceedLimit, getRemaining } from "./plan-limits";
 
+interface StripeState {
+  connectedAccountId: string | null;
+  connected: boolean;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  detailsSubmitted: boolean;
+  requirementsDue: boolean;
+}
+
 interface AppState {
   view: AppView;
   vendor: VendorProfile;
@@ -14,6 +23,7 @@ interface AppState {
   orders: Order[];
   cart: CartItem[];
   customers: Customer[];
+  stripe: StripeState;
   adminPin: string;
   pinUnlocked: boolean;
 }
@@ -66,6 +76,14 @@ interface AppContextType {
   removeCustomer: (customerId: string) => void;
   getCustomerPageUrl: () => string;
 
+  // Stripe Connect
+  stripeConnect: () => Promise<void>;
+  stripeRefresh: () => Promise<void>;
+  stripeDashboard: () => Promise<void>;
+  stripeTestCheckout: () => Promise<void>;
+  stripeLoading: { connect: boolean; refresh: boolean; dashboard: boolean; test: boolean };
+  setStripeLoading: React.Dispatch<React.SetStateAction<{ connect: boolean; refresh: boolean; dashboard: boolean; test: boolean }>>;
+
   // Toast
   toast: string | null;
   setToast: (msg: string | null) => void;
@@ -73,6 +91,15 @@ interface AppContextType {
 
 const STORAGE_KEY = "fmv-app-state";
 const DEFAULT_PIN = "1234";
+
+const DEFAULT_STRIPE: StripeState = {
+  connectedAccountId: null,
+  connected: false,
+  chargesEnabled: false,
+  payoutsEnabled: false,
+  detailsSubmitted: false,
+  requirementsDue: false,
+};
 
 function loadState(): AppState {
   if (typeof window === "undefined") {
@@ -83,6 +110,7 @@ function loadState(): AppState {
       orders: DEMO_ORDERS,
       cart: [],
       customers: [],
+      stripe: DEFAULT_STRIPE,
       adminPin: DEFAULT_PIN,
       pinUnlocked: false,
     };
@@ -98,6 +126,7 @@ function loadState(): AppState {
         ...parsed,
         view: parsed.view || "customer",
         customers: parsed.customers || [],
+        stripe: parsed.stripe || DEFAULT_STRIPE,
         adminPin: parsed.adminPin || DEFAULT_PIN,
         pinUnlocked,
       };
@@ -112,6 +141,7 @@ function loadState(): AppState {
     orders: DEMO_ORDERS,
     cart: [],
     customers: [],
+    stripe: DEFAULT_STRIPE,
     adminPin: DEFAULT_PIN,
     pinUnlocked,
   };
@@ -144,6 +174,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [upgradeVisible, setUpgradeVisible] = useState(false);
   const [upgradeResource, setUpgradeResource] = useState<string | null>(null);
   const [toast, setToastState] = useState<string | null>(null);
+  const [stripeLoading, setStripeLoading] = useState({ connect: false, refresh: false, dashboard: false, test: false });
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isFree = tier === "free";
@@ -406,6 +437,96 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return "/customer";
   }, []);
 
+  // ─── Stripe Connect ───
+  const stripeConnect = useCallback(async () => {
+    setStripeLoading(prev => ({ ...prev, connect: true }));
+    try {
+      const res = await fetch('/api/stripe/connect-account-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vendorId: data.vendor.id || 'v1',
+          ownerEmail: data.vendor.email,
+          farmName: data.vendor.farmName,
+        }),
+      });
+      const result = await res.json();
+      if (result.url) {
+        window.location.href = result.url;
+      } else {
+        alert(result.message || 'Could not create Stripe connect link.');
+      }
+    } catch {
+      alert('Failed to connect to Stripe.');
+    } finally {
+      setStripeLoading(prev => ({ ...prev, connect: false }));
+    }
+  }, [data.vendor.id, data.vendor.email, data.vendor.farmName]);
+
+  const stripeRefresh = useCallback(async () => {
+    setStripeLoading(prev => ({ ...prev, refresh: true }));
+    try {
+      const res = await fetch(`/api/stripe/account-status?vendorId=${data.vendor.id || 'v1'}`);
+      const result = await res.json();
+      if (result.ok) {
+        const nextStripe: StripeState = {
+          connectedAccountId: result.connectedAccountId,
+          connected: result.connected,
+          chargesEnabled: result.chargesEnabled,
+          payoutsEnabled: result.payoutsEnabled,
+          detailsSubmitted: result.detailsSubmitted,
+          requirementsDue: result.requirementsDue,
+        };
+        updateData({ stripe: nextStripe });
+        setToast('Stripe status refreshed ✅');
+      } else {
+        alert(result.message || 'Could not refresh Stripe status.');
+      }
+    } catch {
+      alert('Failed to refresh Stripe status.');
+    } finally {
+      setStripeLoading(prev => ({ ...prev, refresh: false }));
+    }
+  }, [data.vendor.id, updateData, setToast]);
+
+  const stripeDashboard = useCallback(async () => {
+    setStripeLoading(prev => ({ ...prev, dashboard: true }));
+    try {
+      const res = await fetch(`/api/stripe/dashboard-link?vendorId=${data.vendor.id || 'v1'}`);
+      const result = await res.json();
+      if (result.url) {
+        window.open(result.url, '_blank');
+      } else {
+        alert(result.message || 'Could not open Stripe dashboard.');
+      }
+    } catch {
+      alert('Failed to open Stripe dashboard.');
+    } finally {
+      setStripeLoading(prev => ({ ...prev, dashboard: false }));
+    }
+  }, [data.vendor.id]);
+
+  const stripeTestCheckout = useCallback(async () => {
+    setStripeLoading(prev => ({ ...prev, test: true }));
+    try {
+      const res = await fetch('/api/stripe/test-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vendorId: data.vendor.id || 'v1' }),
+      });
+      const result = await res.json();
+      if (result.url) {
+        window.open(result.url, '_blank');
+      } else {
+        alert(result.message || 'Could not create test checkout.');
+      }
+    } catch {
+      alert('Failed to create test checkout.');
+    } finally {
+      setStripeLoading(prev => ({ ...prev, test: false }));
+    }
+  }, [data.vendor.id]);
+
   return (
     <AppContext.Provider
       value={{
@@ -418,6 +539,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addProduct, updateProduct, deleteProduct,
         updateVendor,
         addCustomer, removeCustomer, getCustomerPageUrl,
+        stripeConnect, stripeRefresh, stripeDashboard, stripeTestCheckout, stripeLoading, setStripeLoading,
         toast, setToast,
       }}
     >
