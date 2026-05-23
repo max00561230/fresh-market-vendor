@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useApp } from "@/lib/context";
 import { DAYS_OF_WEEK } from "@/lib/types";
 import { QRCodeSVG } from "qrcode.react";
@@ -8,7 +9,12 @@ import Image from "next/image";
 export default function FlyerPage() {
   const { data, getCustomerPageUrl } = useApp();
   const { vendor } = data;
-  const storeUrl = getCustomerPageUrl();
+  const [storeUrl, setStoreUrl] = useState("");
+
+  // Get dynamic URL on client (works for both here.now and Vercel)
+  useEffect(() => {
+    setStoreUrl(getCustomerPageUrl());
+  }, [getCustomerPageUrl]);
 
   return (
     <div className="flyer-page">
@@ -114,8 +120,10 @@ export default function FlyerPage() {
         .flyer-header {
           text-align: center;
           margin-bottom: 20px;
-          padding-bottom: 16px;
-          border-bottom: 3px solid var(--gold);
+          padding: 20px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 50%, #7f1d1d 100%);
+          color: #fff;
         }
 
         .flyer-logo-row {
@@ -128,13 +136,13 @@ export default function FlyerPage() {
         .flyer-title {
           font-size: 28px;
           font-weight: 900;
-          color: var(--brand);
+          color: #fff;
           line-height: 1.1;
         }
 
         .flyer-tagline {
           font-size: 14px;
-          color: var(--gold);
+          color: #e8c96a;
           font-weight: 600;
           font-style: italic;
         }
