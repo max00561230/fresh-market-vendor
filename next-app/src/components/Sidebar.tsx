@@ -7,16 +7,20 @@ import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
   { href: "/", label: "Shop", emoji: "🛒" },
-  { href: "/orders", label: "Orders", emoji: "📋" },
-  { href: "/admin", label: "Admin", emoji: "⚙️" },
+  { href: "/customer", label: "My Store", emoji: "🏪" },
+  { href: "/customers", label: "Customers", emoji: "👥", protected: true },
+  { href: "/orders", label: "Orders", emoji: "📋", protected: true },
+  { href: "/checkout", label: "Checkout", emoji: "💰", protected: true },
+  { href: "/admin", label: "Admin", emoji: "⚙️", protected: true },
 ];
 
 export default function Sidebar() {
-  const { data, setView } = useApp();
+  const { data, setView, lockAdmin } = useApp();
   const pathname = usePathname();
+  const isAdmin = data.pinUnlocked;
 
   return (
-    <aside className={`sidebar ${data.view === "admin" ? "" : ""}`}>
+    <aside className="sidebar">
       <div className="sidebar-brand">
         <Image src="/jrt-logo.png" alt="JRT logo" width={36} height={36} style={{ borderRadius: 8 }} />
         <div>
@@ -41,16 +45,31 @@ export default function Sidebar() {
       </div>
 
       <nav style={{ padding: "8px 14px", flex: 1 }}>
-        {NAV_LINKS.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={`nav-link ${pathname === link.href ? "active" : ""}`}
+        {NAV_LINKS.map((link) => {
+          // Hide protected links when locked
+          if (link.protected && !isAdmin) return null;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`nav-link ${pathname === link.href ? "active" : ""}`}
+            >
+              <span>{link.emoji}</span>
+              <span>{link.label}</span>
+            </Link>
+          );
+        })}
+
+        {isAdmin && (
+          <button
+            className="nav-link"
+            style={{ marginTop: 12, width: "100%", background: "rgba(255,255,255,.06)" }}
+            onClick={lockAdmin}
           >
-            <span>{link.emoji}</span>
-            <span>{link.label}</span>
-          </Link>
-        ))}
+            <span>🔒</span>
+            <span>Lock Admin</span>
+          </button>
+        )}
       </nav>
 
       <div className="sidebar-footer">

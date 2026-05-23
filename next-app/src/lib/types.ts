@@ -90,6 +90,14 @@ export const PRODUCT_CATEGORIES = [
   { value: "other", label: "📦 Other", emoji: "📦" },
 ] as const;
 
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  joinedAt: string;
+}
+
 export const PRICING_TYPES = [
   { value: "per_pound", label: "Per Pound ($/lb)", unit: "lb" },
   { value: "per_unit", label: "Per Item ($/ea)", unit: "ea" },

@@ -4,12 +4,60 @@ import { useState } from 'react';
 import { useApp } from '@/lib/context';
 import { PRODUCT_CATEGORIES, PRICING_TYPES, PricingType, Product, DAYS_OF_WEEK } from '@/lib/types';
 
-type AdminSection = 'profile' | 'products' | 'data';
+type AdminSection = 'profile' | 'products' | 'customers' | 'data';
 
 export default function AdminPage() {
-  const { data, updateVendor, addProduct, updateProduct, deleteProduct, updateData } = useApp();
-  const { vendor, products } = data;
+  const { data, updateVendor, addProduct, updateProduct, deleteProduct, updateData, changePin, addCustomer, removeCustomer, getCustomerPageUrl, setToast } = useApp();
+  const { vendor, products, customers } = data;
   const [section, setSection] = useState<AdminSection>('profile');
+
+  // ─── PIN Change State ───
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [pinError, setPinError] = useState('');
+
+  const handleChangePin = () => {
+    if (newPin.length < 4) {
+      setPinError('PIN must be at least 4 digits');
+      return;
+    }
+    if (newPin !== confirmPin) {
+      setPinError('PINs do not match');
+      return;
+    }
+    changePin(newPin);
+    setNewPin('');
+    setConfirmPin('');
+    setPinError('');
+  };
+
+  // ─── Add Customer State ───
+  const [custName, setCustName] = useState('');
+  const [custEmail, setCustEmail] = useState('');
+  const [custPhone, setCustPhone] = useState('');
+  const [custError, setCustError] = useState('');
+
+  const handleAddCustomer = () => {
+    if (!custName || !custEmail) {
+      setCustError('Name and email are required');
+      return;
+    }
+    if (customers.find(c => c.email === custEmail)) {
+      setCustError('Customer with this email already exists');
+      return;
+    }
+    addCustomer({
+      id: `cust${Date.now()}`,
+      name: custName,
+      email: custEmail,
+      phone: custPhone || undefined,
+      joinedAt: new Date().toISOString(),
+    });
+    setCustName('');
+    setCustEmail('');
+    setCustPhone('');
+    setCustError('');
+  };
 
   // ─── Vendor Profile Form State ───
   const [farmName, setFarmName] = useState(vendor.farmName);
@@ -100,8 +148,9 @@ export default function AdminPage() {
 
       {/* Section Tabs */}
       <div className="tabs">
-        <button className={`tab ${section === 'profile' ? 'active' : ''}`} onClick={() => setSection('profile')}>👤 Vendor Profile</button>
+        <button className={`tab ${section === 'profile' ? 'active' : ''}`} onClick={() => setSection('profile')}>👤 Profile</button>
         <button className={`tab ${section === 'products' ? 'active' : ''}`} onClick={() => setSection('products')}>🥬 Products</button>
+        <button className={`tab ${section === 'customers' ? 'active' : ''}`} onClick={() => setSection('customers')}>👥 Customers</button>
         <button className={`tab ${section === 'data' ? 'active' : ''}`} onClick={() => setSection('data')}>💾 Data</button>
       </div>
 
@@ -394,9 +443,117 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* ─── Customers Section ─── */}
+      {section === 'customers' && (
+        <div className="space-y-4">
+          <div className="card">
+            <div className="card-header">Add Customer</div>
+            <div className="card-body space-y-3">
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="label">Name</label>
+                  <input className="input" placeholder="Jane Doe" value={custName} onChange={(e) => { setCustName(e.target.value); setCustError(''); }} />
+                </div>
+                <div>
+                  <label className="label">Email</label>
+                  <input className="input" type="email" placeholder="jane@email.com" value={custEmail} onChange={(e) => { setCustEmail(e.target.value); setCustError(''); }} />
+                </div>
+                <div>
+                  <label className="label">Phone (opt)</label>
+                  <input className="input" placeholder="555-1234" value={custPhone} onChange={(e) => { setCustPhone(e.target.value); setCustError(''); }} />
+                </div>
+              </div>
+              {custError && <p className="text-red-500 text-xs">{custError}</p>}
+              <button className="btn btn-primary btn-sm" onClick={handleAddCustomer}>+ Add Customer</button>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-header flex items-center justify-between">
+              <span>Customer List ({customers.length})</span>
+              {customers.length > 0 && (
+                <button
+                  className="btn btn-sm btn-outline"
+                  onClick={() => {
+                    const list = customers.map(c => `${c.name} <${c.email}>`).join(', ');
+                    navigator.clipboard.writeText(list);
+                    setToast('Email list copied! 📋');
+                  }}
+                >
+                  📋 Copy All Emails
+                </button>
+              )}
+            </div>
+            <div className="card-body">
+              {customers.length === 0 ? (
+                <p className="text-sm text-[var(--text-muted)] text-center py-4">
+                  No customers yet. Customers are auto-added when they place orders with an email, or you can add them manually above.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {customers.map((c) => (
+                    <div key={c.id} className="flex items-center gap-3 p-2 border border-[var(--border)] rounded-lg">
+                      <span className="text-lg">👤</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm">{c.name}</div>
+                        <div className="text-xs text-[var(--text-muted)]">{c.email}{c.phone ? ` · ${c.phone}` : ''}</div>
+                      </div>
+                      <button className="btn btn-danger btn-sm" onClick={() => { if (confirm('Remove this customer?')) removeCustomer(c.id); }}>Remove</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-header">📧 Email Announcement</div>
+            <div className="card-body space-y-3">
+              <p className="text-xs text-[var(--text-muted)]">
+                Compose an email to announce specials and your current market location. This opens your email client with all customer addresses.
+              </p>
+              <div>
+                <label className="label">Subject</label>
+                <input className="input" id="email-subject" placeholder="🔥 This week at Green Valley Farm!" />
+              </div>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  const subject = (document.getElementById('email-subject') as HTMLInputElement)?.value || 'Fresh Market Specials!';
+                  const body = `Hi there!\n\nCheck out our fresh products and specials this week.\n\n📍 Find us at: ${vendor.marketSchedules.map(s => `${DAYS_OF_WEEK[s.dayOfWeek]} — ${s.marketName}, ${s.address}, ${s.city} (${s.openTime}–${s.closeTime})`).join('\n')}\n\nShop online: ${getCustomerPageUrl()}\n\n— ${vendor.farmName}`;
+                  const to = customers.map(c => c.email).join(',');
+                  window.open(`mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+                }}
+              >
+                ✉️ Open Email Client
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ─── Data Section ─── */}
       {section === 'data' && (
         <div className="space-y-4">
+          <div className="card">
+            <div className="card-header">🔒 Change PIN</div>
+            <div className="card-body space-y-3">
+              <p className="text-xs text-[var(--text-muted)]">Current default PIN: <strong>1234</strong></p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">New PIN</label>
+                  <input className="input" type="password" maxLength={6} value={newPin} onChange={(e) => { setNewPin(e.target.value.replace(/\D/g, '')); setPinError(''); }} placeholder="New PIN" />
+                </div>
+                <div>
+                  <label className="label">Confirm PIN</label>
+                  <input className="input" type="password" maxLength={6} value={confirmPin} onChange={(e) => { setConfirmPin(e.target.value.replace(/\D/g, '')); setPinError(''); }} placeholder="Confirm" />
+                </div>
+              </div>
+              {pinError && <p className="text-red-500 text-xs">{pinError}</p>}
+              <button className="btn btn-primary btn-sm" onClick={handleChangePin}>Change PIN</button>
+            </div>
+          </div>
+
           <div className="card">
             <div className="card-body space-y-4">
               <div>

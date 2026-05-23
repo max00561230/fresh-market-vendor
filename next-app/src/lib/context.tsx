@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useRef, ReactNode } from "react";
 import {
-  AppView, Product, CartItem, Order, OrderStatus, VendorProfile, PaymentMethod,
+  AppView, Product, CartItem, Order, OrderStatus, VendorProfile, PaymentMethod, Customer,
 } from "./types";
 import { DEMO_VENDOR, DEMO_PRODUCTS, DEMO_ORDERS } from "./db";
 
@@ -12,12 +12,20 @@ interface AppState {
   products: Product[];
   orders: Order[];
   cart: CartItem[];
+  customers: Customer[];
+  adminPin: string;
+  pinUnlocked: boolean;
 }
 
 interface AppContextType {
   data: AppState;
   updateData: (partial: Partial<AppState>) => void;
   setView: (v: AppView) => void;
+
+  // PIN
+  verifyPin: (pin: string) => boolean;
+  changePin: (newPin: string) => void;
+  lockAdmin: () => void;
 
   // Cart
   addToCart: (product: Product, quantity?: number) => void;
@@ -41,31 +49,64 @@ interface AppContextType {
   // Vendor profile (admin)
   updateVendor: (partial: Partial<VendorProfile>) => void;
 
+  // Customers
+  addCustomer: (customer: Customer) => void;
+  removeCustomer: (customerId: string) => void;
+  getCustomerPageUrl: () => string;
+
   // Toast
   toast: string | null;
   setToast: (msg: string | null) => void;
 }
 
 const STORAGE_KEY = "fmv-app-state";
+const DEFAULT_PIN = "1234";
 
 function loadState(): AppState {
   if (typeof window === "undefined") {
-    return { view: "customer", vendor: DEMO_VENDOR, products: DEMO_PRODUCTS, orders: DEMO_ORDERS, cart: [] };
+    return {
+      view: "customer",
+      vendor: DEMO_VENDOR,
+      products: DEMO_PRODUCTS,
+      orders: DEMO_ORDERS,
+      cart: [],
+      customers: [],
+      adminPin: DEFAULT_PIN,
+      pinUnlocked: false,
+    };
   }
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      return { ...parsed, view: parsed.view || "customer" };
+      return {
+        ...parsed,
+        view: parsed.view || "customer",
+        customers: parsed.customers || [],
+        adminPin: parsed.adminPin || DEFAULT_PIN,
+        pinUnlocked: false, // Always start locked
+      };
     }
   } catch { /* ignore */ }
-  return { view: "customer", vendor: DEMO_VENDOR, products: DEMO_PRODUCTS, orders: DEMO_ORDERS, cart: [] };
+  return {
+    view: "customer",
+    vendor: DEMO_VENDOR,
+    products: DEMO_PRODUCTS,
+    orders: DEMO_ORDERS,
+    cart: [],
+    customers: [],
+    adminPin: DEFAULT_PIN,
+    pinUnlocked: false,
+  };
 }
 
 function saveState(state: AppState) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    // Don't persist pinUnlocked
+    const { pinUnlocked, ...toSave } = state;
+    void pinUnlocked;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   } catch { /* ignore */ }
 }
 
@@ -75,11 +116,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppState>(loadState);
   const [toast, setToastState] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const persist = useCallback((state: AppState) => {
-    saveState(state);
-    setData(state);
-  }, []);
 
   const updateData = useCallback((partial: Partial<AppState>) => {
     setData((prev) => {
@@ -105,9 +141,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // ─── PIN ───
+  const verifyPin = useCallback((pin: string) => {
+    if (pin === data.adminPin) {
+      setData((prev) => ({ ...prev, pinUnlocked: true }));
+      return true;
+    }
+    return false;
+  }, [data.adminPin]);
+
+  const changePin = useCallback((newPin: string) => {
+    setData((prev) => {
+      const next = { ...prev, adminPin: newPin, pinUnlocked: true };
+      saveState(next);
+      return next;
+    });
+    setToast("PIN changed ✅");
+  }, [setToast]);
+
+  const lockAdmin = useCallback(() => {
+    setData((prev) => ({ ...prev, pinUnlocked: false }));
+  }, []);
+
   // ─── Cart ───
   const cartSubtotal = data.cart.reduce((sum, item) => sum + item.subtotal, 0);
-  const cartTax = 0; // No tax for farm products in NC
+  const cartTax = 0;
   const cartTotal = cartSubtotal + cartTax;
   const cartCount = data.cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -186,14 +244,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+
+    // Auto-add customer from order if email provided
+    let newCustomers = [...data.customers];
+    if (info.email && !data.customers.find(c => c.email === info.email)) {
+      newCustomers.push({
+        id: `cust${Date.now()}`,
+        name: info.name,
+        email: info.email,
+        phone: info.phone,
+        joinedAt: new Date().toISOString(),
+      });
+    }
+
     setData((prev) => {
-      const next = { ...prev, orders: [order, ...prev.orders], cart: [] };
+      const next = { ...prev, orders: [order, ...prev.orders], cart: [], customers: newCustomers };
       saveState(next);
       return next;
     });
     setToast("Order placed! 🎉");
     return order;
-  }, [data.cart, data.vendor, cartSubtotal, cartTax, cartTotal, setToast]);
+  }, [data.cart, data.vendor, data.customers, cartSubtotal, cartTax, cartTotal, setToast]);
 
   const updateOrderStatus = useCallback((orderId: string, status: OrderStatus) => {
     setData((prev) => {
@@ -246,15 +317,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setToast("Profile updated ✅");
   }, [setToast]);
 
+  // ─── Customers ───
+  const addCustomer = useCallback((customer: Customer) => {
+    setData((prev) => {
+      if (prev.customers.find(c => c.email === customer.email)) {
+        return prev; // Already exists
+      }
+      const next = { ...prev, customers: [...prev.customers, customer] };
+      saveState(next);
+      return next;
+    });
+    setToast("Customer added ✅");
+  }, [setToast]);
+
+  const removeCustomer = useCallback((customerId: string) => {
+    setData((prev) => {
+      const next = { ...prev, customers: prev.customers.filter((c) => c.id !== customerId) };
+      saveState(next);
+      return next;
+    });
+    setToast("Customer removed");
+  }, [setToast]);
+
+  const getCustomerPageUrl = useCallback(() => {
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}/customer`;
+    }
+    return "/customer";
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
         data, updateData, setView,
+        verifyPin, changePin, lockAdmin,
         addToCart, removeFromCart, updateQuantity, clearCart,
         cartSubtotal, cartTax, cartTotal, cartCount,
         placeOrder, updateOrderStatus,
         addProduct, updateProduct, deleteProduct,
         updateVendor,
+        addCustomer, removeCustomer, getCustomerPageUrl,
         toast, setToast,
       }}
     >
