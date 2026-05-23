@@ -11,7 +11,7 @@ import UpgradePrompt from "@/components/UpgradePrompt";
 import CustomerCart from "@/components/CustomerCart";
 import { useState, ReactNode } from "react";
 
-const PROTECTED_PATHS = ["/admin", "/checkout", "/orders", "/customers"];
+const PROTECTED_PATHS = ["/admin", "/checkout", "/orders", "/manage-customers"];
 
 // Public pages that customers see (no admin UI)
 const PUBLIC_PATHS = ["/", "/customer", "/products", "/flyer", "/cart"];
