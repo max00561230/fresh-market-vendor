@@ -248,6 +248,19 @@ nav.bottom-nav .nav-items { display: flex; justify-content: space-around; }
 .section-header h2 { font-size: 1.25rem; font-weight: 700; color: var(--text); margin: 0; }
 .section-header .emoji { font-size: 1.4rem; }
 
+/* ─── Vendor Banner ─── */
+.vendor-banner {
+  background: var(--brand-gradient);
+  padding: 24px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+.vendor-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
 /* ─── Hero ─── */
 .hero-gradient {
   background: var(--brand-gradient);
