@@ -50,7 +50,9 @@ function LayoutShell({ children }: { children: ReactNode }) {
 
   // Determine if this is a public customer-facing page (no admin unlocked)
   const isAdmin = data.pinUnlocked;
-  const isPublicPage = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p));
+  const isPublicPage = PUBLIC_PATHS.some((p) =>
+    p === "/" ? pathname === "/" : pathname === p || pathname.startsWith(p + "/")
+  );
 
   // If on a public page and NOT in admin mode, show clean customer layout
   if (isPublicPage && !isAdmin) {
