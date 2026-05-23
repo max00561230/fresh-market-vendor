@@ -602,9 +602,15 @@ nav.bottom-nav .nav-items { display: flex; justify-content: space-around; }
   gap: 24px;
   align-items: flex-start;
   width: 100%;
-  max-width: 1100px;
+  /* inherits max-width: 780px from .main-content > * */
 }
 .customer-layout-main {
   flex: 1;
   min-width: 0;
+}
+@media (max-width: 767px) {
+  .customer-layout {
+    flex-direction: column;
+    gap: 16px;
+  }
 }
