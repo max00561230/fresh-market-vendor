@@ -38,7 +38,13 @@ function AuthGuardWrapper({ children }: { children: ReactNode }) {
       <Sidebar />
       <TopBar />
       <AuthGuard>
-        <main className="main-content">{children}</main>
+        <main className="main-content">
+          {children}
+          <footer className="app-footer">
+            <img src="/jrt-logo.png" alt="JRT" className="app-footer-logo" />
+            <span>Powered by <strong>Jade Rose Technology</strong></span>
+          </footer>
+        </main>
       </AuthGuard>
       <BottomNav />
     </div>

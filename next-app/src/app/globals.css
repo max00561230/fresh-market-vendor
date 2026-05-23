@@ -292,6 +292,24 @@ nav.bottom-nav .nav-items { display: flex; justify-content: space-around; }
 .receipt-line { display: flex; justify-content: space-between; padding: 6px 0; font-size: .875rem; }
 .receipt-total { display: flex; justify-content: space-between; padding: 10px 0; font-size: 1.1rem; font-weight: 800; border-top: 2px solid var(--text); margin-top: 8px; }
 
+/* ─── Footer ─── */
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 40px;
+  padding: 20px 0 8px;
+  border-top: 1px solid var(--border);
+  font-size: .8rem;
+  color: var(--text-muted);
+}
+.app-footer-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+}
+
 /* ─── Misc ─── */
 .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
 .empty-state .emoji { font-size: 3rem; margin-bottom: 12px; }
