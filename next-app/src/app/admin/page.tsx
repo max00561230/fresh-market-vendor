@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { useApp } from '@/lib/context';
 import { PRODUCT_CATEGORIES, PRICING_TYPES, PricingType, Product, DAYS_OF_WEEK } from '@/lib/types';
 import { wouldExceedLimit } from '@/lib/plan-limits';
+import Link from 'next/link';
 
-type AdminSection = 'profile' | 'products' | 'customers' | 'data';
+type AdminSection = 'menu' | 'profile' | 'products' | 'customers' | 'data';
 
 export default function AdminPage() {
   const { data, updateVendor, addProduct, updateProduct, deleteProduct, updateData, changePin, addCustomer, removeCustomer, getCustomerPageUrl, setToast, isFree, showUpgrade } = useApp();
   const { vendor, products, customers } = data;
-  const [section, setSection] = useState<AdminSection>('profile');
+  const [section, setSection] = useState<AdminSection>('menu');
 
   // ─── PIN Change State ───
   const [newPin, setNewPin] = useState('');
@@ -43,7 +44,6 @@ export default function AdminPage() {
       setCustError('Name and email are required');
       return;
     }
-    // Free plan limit check
     if (isFree && wouldExceedLimit('customers', customers.length, 'free')) {
       showUpgrade('customers');
       return;
@@ -96,7 +96,6 @@ export default function AdminPage() {
   const [showProductForm, setShowProductForm] = useState(false);
 
   const openNewProduct = () => {
-    // Free plan limit check
     if (isFree && wouldExceedLimit('products', products.length, 'free')) {
       showUpgrade('products');
       return;
@@ -112,7 +111,6 @@ export default function AdminPage() {
 
   const handleSaveProduct = () => {
     if (!editingProduct) return;
-    // Update unitLabel based on pricingType
     const pt = PRICING_TYPES.find((p) => p.value === editingProduct.pricingType);
     const updated = { ...editingProduct, unitLabel: pt?.unit || 'ea' };
 
@@ -150,24 +148,98 @@ export default function AdminPage() {
     URL.revokeObjectURL(url);
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="section-header">
-        <span className="emoji">⚙️</span>
-        <h2>Admin Dashboard</h2>
-      </div>
+  // ─── Menu Items for Dashboard ───
+  const menuItems = [
+    { key: 'profile', label: 'Profile', emoji: '👤', desc: 'Farm name, address, hours' },
+    { key: 'products', label: 'Products', emoji: '🥬', desc: `${products.length} products` },
+    { key: 'customers', label: 'Customers', emoji: '👥', desc: `${customers.length} customers` },
+    { key: 'data', label: 'Settings & Data', emoji: '💾', desc: 'PIN, export, reset' },
+  ];
 
-      {/* Section Tabs */}
-      <div className="tabs">
-        <button className={`tab ${section === 'profile' ? 'active' : ''}`} onClick={() => setSection('profile')}>👤 Profile</button>
-        <button className={`tab ${section === 'products' ? 'active' : ''}`} onClick={() => setSection('products')}>🥬 Products</button>
-        <button className={`tab ${section === 'customers' ? 'active' : ''}`} onClick={() => setSection('customers')}>👥 Customers</button>
-        <button className={`tab ${section === 'data' ? 'active' : ''}`} onClick={() => setSection('data')}>💾 Data</button>
-      </div>
+  return (
+    <div className="admin-centered">
+      {/* Back to menu breadcrumb */}
+      {section !== 'menu' && (
+        <button
+          className="btn btn-ghost btn-sm"
+          onClick={() => setSection('menu')}
+          style={{ marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+        >
+          ← Back to Menu
+        </button>
+      )}
+
+      {/* ─── Menu Dashboard ─── */}
+      {section === 'menu' && (
+        <div className="space-y-6">
+          <div className="section-header">
+            <span className="emoji">⚙️</span>
+            <h2>Admin Dashboard</h2>
+          </div>
+
+          {/* Quick Links to other app pages */}
+          <div className="card">
+            <div className="card-header">🧭 Navigate</div>
+            <div className="card-body">
+              <div className="admin-menu-grid">
+                <Link href="/" className="admin-menu-card">
+                  <span className="admin-menu-emoji">🛒</span>
+                  <span className="admin-menu-label">Shop</span>
+                  <span className="admin-menu-desc">Browse & add to cart</span>
+                </Link>
+                <Link href="/orders" className="admin-menu-card">
+                  <span className="admin-menu-emoji">📋</span>
+                  <span className="admin-menu-label">Orders</span>
+                  <span className="admin-menu-desc">View & manage orders</span>
+                </Link>
+                <Link href="/checkout" className="admin-menu-card">
+                  <span className="admin-menu-emoji">💰</span>
+                  <span className="admin-menu-label">POS</span>
+                  <span className="admin-menu-desc">In-person checkout</span>
+                </Link>
+                <Link href="/customer" className="admin-menu-card">
+                  <span className="admin-menu-emoji">🏪</span>
+                  <span className="admin-menu-label">My Store</span>
+                  <span className="admin-menu-desc">Customer-facing page</span>
+                </Link>
+                <Link href="/flyer" className="admin-menu-card">
+                  <span className="admin-menu-emoji">📄</span>
+                  <span className="admin-menu-label">QR / Flyer</span>
+                  <span className="admin-menu-desc">Print & share QR code</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Admin Settings Menu */}
+          <div className="card">
+            <div className="card-header">⚙️ Settings</div>
+            <div className="card-body">
+              <div className="admin-menu-grid">
+                {menuItems.map((item) => (
+                  <button
+                    key={item.key}
+                    className="admin-menu-card"
+                    onClick={() => setSection(item.key as AdminSection)}
+                  >
+                    <span className="admin-menu-emoji">{item.emoji}</span>
+                    <span className="admin-menu-label">{item.label}</span>
+                    <span className="admin-menu-desc">{item.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── Profile Section ─── */}
       {section === 'profile' && (
         <div className="space-y-4">
+          <div className="section-header">
+            <span className="emoji">👤</span>
+            <h2>Farm Profile</h2>
+          </div>
           <div className="card">
             <div className="card-header">Farm Details</div>
             <div className="card-body space-y-4">
@@ -332,6 +404,10 @@ export default function AdminPage() {
       {/* ─── Products Section ─── */}
       {section === 'products' && (
         <div className="space-y-4">
+          <div className="section-header">
+            <span className="emoji">🥬</span>
+            <h2>Products</h2>
+          </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-[var(--text-muted)]">
               {products.length}{isFree ? ` / ${3}` : ''} products
@@ -459,6 +535,10 @@ export default function AdminPage() {
       {/* ─── Customers Section ─── */}
       {section === 'customers' && (
         <div className="space-y-4">
+          <div className="section-header">
+            <span className="emoji">👥</span>
+            <h2>Customers</h2>
+          </div>
           <div className="card">
             <div className="card-header">Add Customer</div>
             <div className="card-body space-y-3">
@@ -548,6 +628,10 @@ export default function AdminPage() {
       {/* ─── Data Section ─── */}
       {section === 'data' && (
         <div className="space-y-4">
+          <div className="section-header">
+            <span className="emoji">💾</span>
+            <h2>Settings & Data</h2>
+          </div>
           <div className="card">
             <div className="card-header">🔒 Change PIN</div>
             <div className="card-body space-y-3">
