@@ -58,7 +58,7 @@ function LayoutShell({ children }: { children: ReactNode }) {
     const showCart = pathname === "/" || pathname === "/customer" || pathname === "/products";
 
     return (
-      <div className="app-shell">
+      <div className="app-shell app-shell--shop">
         {/* Vendor banner at top — replaces sidebar on shop pages */}
         <header className="vendor-top-banner" style={{ display: "flex" }}>
           <span className="vendor-banner-name">{data.vendor.farmName}</span>
