@@ -1,0 +1,16 @@
+{
+  "name": "FMV — Fresh Market Vendor",
+  "short_name": "FMV",
+  "description": "POS & online ordering for farm vendors",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#b91c1c",
+  "icons": [
+    {
+      "src": "/jrt-logo.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}
