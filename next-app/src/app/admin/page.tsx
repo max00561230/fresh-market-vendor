@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import { useApp } from '@/lib/context';
 import { PRODUCT_CATEGORIES, PRICING_TYPES, PricingType, Product, DAYS_OF_WEEK } from '@/lib/types';
+import { wouldExceedLimit } from '@/lib/plan-limits';
 
 type AdminSection = 'profile' | 'products' | 'customers' | 'data';
 
 export default function AdminPage() {
-  const { data, updateVendor, addProduct, updateProduct, deleteProduct, updateData, changePin, addCustomer, removeCustomer, getCustomerPageUrl, setToast } = useApp();
+  const { data, updateVendor, addProduct, updateProduct, deleteProduct, updateData, changePin, addCustomer, removeCustomer, getCustomerPageUrl, setToast, isFree, showUpgrade } = useApp();
   const { vendor, products, customers } = data;
   const [section, setSection] = useState<AdminSection>('profile');
 
@@ -40,6 +41,11 @@ export default function AdminPage() {
   const handleAddCustomer = () => {
     if (!custName || !custEmail) {
       setCustError('Name and email are required');
+      return;
+    }
+    // Free plan limit check
+    if (isFree && wouldExceedLimit('customers', customers.length, 'free')) {
+      showUpgrade('customers');
       return;
     }
     if (customers.find(c => c.email === custEmail)) {
@@ -90,6 +96,11 @@ export default function AdminPage() {
   const [showProductForm, setShowProductForm] = useState(false);
 
   const openNewProduct = () => {
+    // Free plan limit check
+    if (isFree && wouldExceedLimit('products', products.length, 'free')) {
+      showUpgrade('products');
+      return;
+    }
     setEditingProduct({ ...emptyProduct, id: `p${Date.now()}` });
     setShowProductForm(true);
   };
@@ -322,7 +333,9 @@ export default function AdminPage() {
       {section === 'products' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-[var(--text-muted)]">{products.length} products</span>
+            <span className="text-sm text-[var(--text-muted)]">
+              {products.length}{isFree ? ` / ${3}` : ''} products
+            </span>
             <button className="btn btn-primary btn-sm" onClick={openNewProduct}>+ Add Product</button>
           </div>
 

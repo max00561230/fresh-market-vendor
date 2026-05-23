@@ -19,7 +19,7 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 type FilterTab = 'all' | 'active' | 'completed';
 
 export default function OrdersPage() {
-  const { data, updateOrderStatus } = useApp();
+  const { data, updateOrderStatus, isFree } = useApp();
   const { orders } = data;
 
   const [tab, setTab] = useState<FilterTab>('all');
@@ -42,7 +42,7 @@ export default function OrdersPage() {
       <div className="section-header">
         <span className="emoji">📋</span>
         <h2>Orders</h2>
-        <span className="badge">{orders.length}</span>
+        <span className="badge">{orders.length}{isFree ? ' / 3' : ''}</span>
       </div>
 
       {/* Filter Tabs */}

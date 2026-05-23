@@ -3,14 +3,16 @@
 import { useState } from 'react';
 import { useApp } from '@/lib/context';
 import { PaymentMethod } from '@/lib/types';
+import { wouldExceedLimit } from '@/lib/plan-limits';
 import Link from 'next/link';
 
 export default function CartPage() {
   const {
     data, cartSubtotal, cartTax, cartTotal,
     updateQuantity, removeFromCart, clearCart, placeOrder,
+    isFree, showUpgrade,
   } = useApp();
-  const { cart } = data;
+  const { cart, orders } = data;
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [name, setName] = useState('');
@@ -43,6 +45,11 @@ export default function CartPage() {
 
   const handleSubmit = () => {
     if (!name.trim()) return;
+    // Free plan order limit check
+    if (isFree && wouldExceedLimit('orders', orders.length, 'free')) {
+      showUpgrade('orders');
+      return;
+    }
     placeOrder({
       name: name.trim(),
       phone: phone.trim() || undefined,

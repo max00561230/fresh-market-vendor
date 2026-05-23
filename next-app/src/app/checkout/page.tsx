@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useApp } from '@/lib/context';
 import { PaymentMethod, PricingType } from '@/lib/types';
+import { wouldExceedLimit } from '@/lib/plan-limits';
 
 const PRICE_LABELS: Record<PricingType, string> = {
   per_pound: '/lb',
@@ -15,9 +16,9 @@ export default function CheckoutPage() {
   const {
     data, addToCart, removeFromCart, updateQuantity,
     cartSubtotal, cartTax, cartTotal, cartCount,
-    placeOrder,
+    placeOrder, isFree, showUpgrade,
   } = useApp();
-  const { cart, products } = data;
+  const { cart, products, orders } = data;
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [weightModal, setWeightModal] = useState<{ product: typeof products[0] | null; weight: string }>({ product: null, weight: '1.0' });
@@ -42,6 +43,11 @@ export default function CheckoutPage() {
 
   const handleCompleteSale = () => {
     if (cart.length === 0) return;
+    // Free plan order limit check
+    if (isFree && orders.length >= 3) {
+      showUpgrade('orders');
+      return;
+    }
     placeOrder({
       name: 'Walk-in Customer',
       paymentMethod,

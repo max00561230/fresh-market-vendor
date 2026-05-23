@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import PinLock from "@/components/PinLock";
+import UpgradePrompt from "@/components/UpgradePrompt";
 import { useState, ReactNode } from "react";
 
 const PROTECTED_PATHS = ["/admin", "/checkout", "/orders"];
@@ -24,10 +25,31 @@ function AuthGuard({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function UpgradeModal() {
+  const { upgradeVisible, upgradeResource, hideUpgrade, setTier } = useApp();
+
+  const handleActivate = async (key: string) => {
+    // Accept any properly formatted JRT key for now
+    // Real verification will use the JRT license server
+    const clean = key.trim().toUpperCase();
+    if (/^JRT-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(clean)) {
+      setTier("full");
+      return { ok: true };
+    }
+    return { ok: false, message: "Invalid license key format. Expected JRT-XXXX-XXXX-XXXX" };
+  };
+
+  if (!upgradeVisible) return null;
+  return <UpgradePrompt resource={upgradeResource || undefined} onClose={hideUpgrade} onActivate={handleActivate} />;
+}
+
 export default function ClientShell({ children }: { children: ReactNode }) {
   return (
     <AppProvider>
-      <AuthGuardWrapper>{children}</AuthGuardWrapper>
+      <AuthGuardWrapper>
+        {children}
+        <UpgradeModal />
+      </AuthGuardWrapper>
     </AppProvider>
   );
 }

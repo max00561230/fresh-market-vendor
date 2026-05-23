@@ -15,7 +15,7 @@ const NAV_LINKS = [
 ];
 
 export default function Sidebar() {
-  const { data, setView, lockAdmin } = useApp();
+  const { data, setView, lockAdmin, tier, isFree, showUpgrade } = useApp();
   const pathname = usePathname();
   const isAdmin = data.pinUnlocked;
 
@@ -28,6 +28,21 @@ export default function Sidebar() {
           <div className="sidebar-brand-sub">Fresh Market Vendor</div>
         </div>
       </div>
+
+      {/* Plan Tier Badge */}
+      {isFree ? (
+        <button
+          className="w-full mt-2 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5"
+          style={{ background: 'rgba(180, 83, 9, 0.15)', color: '#d97706', border: '1px solid rgba(180, 83, 9, 0.3)' }}
+          onClick={() => showUpgrade('general')}
+        >
+          👑 Free Plan — Upgrade
+        </button>
+      ) : (
+        <div className="mt-2 px-3 py-2 rounded-lg text-xs font-semibold text-center" style={{ background: 'rgba(22, 163, 74, 0.1)', color: '#16a34a', border: '1px solid rgba(22, 163, 74, 0.2)' }}>
+          ✅ FMV Custom Build
+        </div>
+      )}
 
       <div className="view-switcher">
         <button

@@ -5,6 +5,7 @@ import {
   AppView, Product, CartItem, Order, OrderStatus, VendorProfile, PaymentMethod, Customer,
 } from "./types";
 import { DEMO_VENDOR, DEMO_PRODUCTS, DEMO_ORDERS } from "./db";
+import { PlanTier, PLAN_LIMITS, STORAGE_KEY_PLAN, wouldExceedLimit, getRemaining } from "./plan-limits";
 
 interface AppState {
   view: AppView;
@@ -26,6 +27,17 @@ interface AppContextType {
   verifyPin: (pin: string) => boolean;
   changePin: (newPin: string) => void;
   lockAdmin: () => void;
+
+  // Plan
+  tier: PlanTier;
+  setTier: (tier: PlanTier) => void;
+  isFree: boolean;
+  canAdd: (resource: "customers" | "products" | "orders", currentCount: number) => boolean;
+  remaining: (resource: "customers" | "products" | "orders", currentCount: number) => number | null;
+  showUpgrade: (resource?: string) => void;
+  hideUpgrade: () => void;
+  upgradeVisible: boolean;
+  upgradeResource: string | null;
 
   // Cart
   addToCart: (product: Product, quantity?: number) => void;
@@ -100,6 +112,15 @@ function loadState(): AppState {
   };
 }
 
+function loadTier(): PlanTier {
+  if (typeof window === "undefined") return "free";
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_PLAN);
+    if (stored === "full") return "full";
+  } catch { /* ignore */ }
+  return "free";
+}
+
 function saveState(state: AppState) {
   if (typeof window === "undefined") return;
   try {
@@ -114,8 +135,13 @@ const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppState>(loadState);
+  const [tier, setTierState] = useState<PlanTier>(loadTier);
+  const [upgradeVisible, setUpgradeVisible] = useState(false);
+  const [upgradeResource, setUpgradeResource] = useState<string | null>(null);
   const [toast, setToastState] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isFree = tier === "free";
 
   const updateData = useCallback((partial: Partial<AppState>) => {
     setData((prev) => {
@@ -139,6 +165,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (msg) {
       toastTimer.current = setTimeout(() => setToastState(null), 2000);
     }
+  }, []);
+
+  const setTier = useCallback((newTier: PlanTier) => {
+    setTierState(newTier);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY_PLAN, newTier);
+    }
+  }, []);
+
+  // ─── Plan Limit Checks ───
+  const canAdd = useCallback((resource: "customers" | "products" | "orders", currentCount: number) => {
+    return !wouldExceedLimit(resource, currentCount, tier);
+  }, [tier]);
+
+  const remaining = useCallback((resource: "customers" | "products" | "orders", currentCount: number) => {
+    return getRemaining(resource, currentCount, tier);
+  }, [tier]);
+
+  const showUpgrade = useCallback((resource?: string) => {
+    setUpgradeResource(resource || null);
+    setUpgradeVisible(true);
+  }, []);
+
+  const hideUpgrade = useCallback(() => {
+    setUpgradeVisible(false);
+    setUpgradeResource(null);
   }, []);
 
   // ─── PIN ───
@@ -351,6 +403,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       value={{
         data, updateData, setView,
         verifyPin, changePin, lockAdmin,
+        tier, setTier, isFree, canAdd, remaining, showUpgrade, hideUpgrade, upgradeVisible, upgradeResource,
         addToCart, removeFromCart, updateQuantity, clearCart,
         cartSubtotal, cartTax, cartTotal, cartCount,
         placeOrder, updateOrderStatus,

@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useApp } from "@/lib/context";
 import { Customer, DAYS_OF_WEEK } from "@/lib/types";
+import { wouldExceedLimit } from "@/lib/plan-limits";
 import Link from "next/link";
 
 export default function CustomersPage() {
-  const { data, addCustomer, removeCustomer, getCustomerPageUrl, setToast } = useApp();
+  const { data, addCustomer, removeCustomer, getCustomerPageUrl, setToast, isFree, showUpgrade } = useApp();
   const { vendor, customers } = data;
 
   const [custName, setCustName] = useState("");
@@ -18,6 +19,11 @@ export default function CustomersPage() {
   const handleAdd = () => {
     if (!custName || !custEmail) {
       setCustError("Name and email are required");
+      return;
+    }
+    // Free plan limit check
+    if (isFree && wouldExceedLimit("customers", customers.length, "free")) {
+      showUpgrade("customers");
       return;
     }
     if (customers.find((c) => c.email === custEmail)) {
@@ -86,7 +92,7 @@ export default function CustomersPage() {
       {/* Customer List */}
       <div className="card">
         <div className="card-header flex items-center justify-between">
-          <span>Customer List ({customers.length})</span>
+          <span>Customer List ({customers.length}{isFree ? ` / 3` : ''})</span>
           {customers.length > 0 && (
             <button className="btn btn-sm btn-outline" onClick={handleCopyEmails}>📋 Copy All Emails</button>
           )}
