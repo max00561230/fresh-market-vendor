@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { AppProvider, useApp } from "@/lib/context";
 import Sidebar from "@/components/Sidebar";
@@ -12,9 +12,6 @@ import CustomerCart from "@/components/CustomerCart";
 import { useState, ReactNode } from "react";
 
 const PROTECTED_PATHS = ["/admin", "/checkout", "/orders"];
-
-// Public pages that customers see (no admin UI)
-const PUBLIC_PATHS = ["/", "/customer", "/products", "/flyer", "/cart"];
 
 function AuthGuard({ children }: { children: ReactNode }) {
   const { data } = useApp();
@@ -50,22 +47,21 @@ function LayoutShell({ children }: { children: ReactNode }) {
   const { data, cartCount } = useApp();
   const pathname = usePathname();
 
-  // Determine if this is a public customer-facing page (no admin unlocked)
-  const isAdmin = data.pinUnlocked;
-  const isPublicPage = PUBLIC_PATHS.some((p) =>
+  // Shop/customer-facing pages: always show clean customer layout (no sidebar)
+  // even when admin is logged in — these pages have no admin menu
+  const SHOP_PAGES = ["/", "/customer", "/products", "/flyer", "/cart"];
+  const isShopPage = SHOP_PAGES.some((p) =>
     p === "/" ? pathname === "/" : pathname === p || pathname.startsWith(p + "/")
   );
-
-  // If on a public page and NOT in admin mode, show clean customer layout with cart sidebar
-  if (isPublicPage && !isAdmin) {
-    // Pages that should show the cart sidebar (shop pages)
+  // Customer view: top banner with vendor name, no sidebar, cart on shop pages
+  if (isShopPage) {
     const showCart = pathname === "/" || pathname === "/customer" || pathname === "/products";
 
     return (
       <div className="app-shell">
-        {/* Minimal topbar for customer view */}
-        <header className="topbar" style={{ display: "flex" }}>
-          <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>{data.vendor.farmName}</span>
+        {/* Vendor banner at top — replaces sidebar on shop pages */}
+        <header className="vendor-top-banner" style={{ display: "flex" }}>
+          <span className="vendor-banner-name">{data.vendor.farmName}</span>
           <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#d4a843", fontWeight: 600 }}>
             Fresh Market
           </span>
@@ -86,7 +82,7 @@ function LayoutShell({ children }: { children: ReactNode }) {
             <span>Powered by <strong>Jade Rose Technology</strong></span>
           </footer>
         </main>
-        {/* Customer-only bottom nav: Shop, Store, QR, Cart */}
+        {/* Customer bottom nav */}
         <nav className="bottom-nav">
           <div className="nav-items">
             <Link href="/" className={`bottom-link ${pathname === "/" ? "active" : ""}`}>
@@ -118,7 +114,7 @@ function LayoutShell({ children }: { children: ReactNode }) {
     );
   }
 
-  // Admin mode — show full sidebar + all nav
+  // Admin/protected pages — show sidebar + admin nav
   return (
     <div className="app-shell">
       <Sidebar />
