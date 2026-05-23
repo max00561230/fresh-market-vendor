@@ -16,7 +16,7 @@ const NAV_LINKS = [
 ];
 
 export default function Sidebar() {
-  const { data, setView, lockAdmin, tier, isFree, showUpgrade } = useApp();
+  const { data, lockAdmin, tier, isFree, showUpgrade } = useApp();
   const pathname = usePathname();
   const isAdmin = data.pinUnlocked;
 
@@ -44,21 +44,6 @@ export default function Sidebar() {
           ✅ FMV Custom Build
         </div>
       )}
-
-      <div className="view-switcher">
-        <button
-          className={`view-btn ${data.view === "customer" ? "active" : ""}`}
-          onClick={() => setView("customer")}
-        >
-          🛒 Shop
-        </button>
-        <button
-          className={`view-btn ${data.view === "admin" ? "active" : ""}`}
-          onClick={() => setView("admin")}
-        >
-          ⚙️ Admin
-        </button>
-      </div>
 
       <nav style={{ padding: "8px 14px", flex: 1 }}>
         {NAV_LINKS.map((link) => {
