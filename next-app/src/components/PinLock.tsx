@@ -21,8 +21,19 @@ export default function PinLock({ onSuccess }: { onSuccess: () => void }) {
 
   const handleDigit = (d: string) => {
     if (pin.length < 6) {
-      setPin((prev) => prev + d);
+      const newPin = pin + d;
+      setPin(newPin);
       setError(false);
+      // Auto-submit when 4+ digits entered
+      if (newPin.length >= 4) {
+        if (verifyPin(newPin)) {
+          setError(false);
+          onSuccess();
+        } else {
+          setError(true);
+          setPin("");
+        }
+      }
     }
   };
 
