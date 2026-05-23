@@ -1,17 +1,20 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AppProvider, useApp } from "@/lib/context";
 import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import PinLock from "@/components/PinLock";
 import UpgradePrompt from "@/components/UpgradePrompt";
-import CustomerCart from "@/components/CustomerCart";
 import { useState, ReactNode } from "react";
 
-const PROTECTED_PATHS = ["/admin", "/checkout", "/orders"];
+const PROTECTED_PATHS = ["/admin", "/checkout", "/orders", "/customers"];
+
+// Public pages that customers see (no admin UI)
+const PUBLIC_PATHS = ["/", "/customer", "/products", "/flyer", "/cart"];
 
 function AuthGuard({ children }: { children: ReactNode }) {
   const { data } = useApp();
@@ -44,45 +47,30 @@ function UpgradeModal() {
 }
 
 function LayoutShell({ children }: { children: ReactNode }) {
-  const { data, cartCount } = useApp();
+  const { data } = useApp();
   const pathname = usePathname();
 
-  // Shop/customer-facing pages: always show clean customer layout (no sidebar)
-  // even when admin is logged in — these pages have no admin menu
-  const SHOP_PAGES = ["/", "/customer", "/products", "/flyer", "/cart"];
-  const isShopPage = SHOP_PAGES.some((p) =>
+  const isAdmin = data.pinUnlocked;
+  const isPublicPage = PUBLIC_PATHS.some((p) =>
     p === "/" ? pathname === "/" : pathname === p || pathname.startsWith(p + "/")
   );
-  // Customer view: top banner with vendor name, no sidebar, cart on shop pages
-  if (isShopPage) {
-    const showCart = pathname === "/" || pathname === "/customer" || pathname === "/products";
 
+  if (isPublicPage && !isAdmin) {
     return (
-      <div className="app-shell app-shell--shop">
-        {/* Vendor banner at top — replaces sidebar on shop pages */}
-        <header className="vendor-top-banner" style={{ display: "flex" }}>
-          <span className="vendor-banner-name">{data.vendor.farmName}</span>
+      <div className="app-shell">
+        <header className="topbar" style={{ display: "flex" }}>
+          <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>{data.vendor.farmName}</span>
           <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#d4a843", fontWeight: 600 }}>
             Fresh Market
           </span>
         </header>
         <main className="main-content">
-          {showCart ? (
-            <div className="customer-layout">
-              <div className="customer-layout-main">
-                {children}
-              </div>
-              <CustomerCart />
-            </div>
-          ) : (
-            <>{children}</>
-          )}
+          {children}
           <footer className="app-footer">
-            <img src="/jrt-logo.png" alt="JRT" className="app-footer-logo" />
+            <Image src="/jrt-logo.png" alt="JRT" className="app-footer-logo" width={28} height={28} />
             <span>Powered by <strong>Jade Rose Technology</strong></span>
           </footer>
         </main>
-        {/* Customer bottom nav */}
         <nav className="bottom-nav">
           <div className="nav-items">
             <Link href="/" className={`bottom-link ${pathname === "/" ? "active" : ""}`}>
@@ -97,24 +85,12 @@ function LayoutShell({ children }: { children: ReactNode }) {
               <span className="icon">📄</span>
               <span>QR</span>
             </Link>
-            <Link href="/cart" className={`bottom-link ${pathname === "/cart" ? "active" : ""}`}>
-              <span className="icon" style={{ position: "relative" }}>
-                🛍️
-                {cartCount > 0 && (
-                  <span className="badge" style={{ position: "absolute", top: -4, right: -6, fontSize: "0.55rem", padding: "0 4px", minWidth: 16, height: 16 }}>
-                    {cartCount}
-                  </span>
-                )}
-              </span>
-              <span>Cart</span>
-            </Link>
           </div>
         </nav>
       </div>
     );
   }
 
-  // Admin/protected pages — show sidebar + admin nav
   return (
     <div className="app-shell">
       <Sidebar />
@@ -123,7 +99,7 @@ function LayoutShell({ children }: { children: ReactNode }) {
         <main className="main-content has-sidebar">
           {children}
           <footer className="app-footer">
-            <img src="/jrt-logo.png" alt="JRT" className="app-footer-logo" />
+            <Image src="/jrt-logo.png" alt="JRT" className="app-footer-logo" width={28} height={28} />
             <span>Powered by <strong>Jade Rose Technology</strong></span>
           </footer>
         </main>

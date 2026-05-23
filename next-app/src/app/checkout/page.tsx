@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useApp } from '@/lib/context';
 import { PaymentMethod, PricingType } from '@/lib/types';
-import { wouldExceedLimit } from '@/lib/plan-limits';
 
 const PRICE_LABELS: Record<PricingType, string> = {
   per_pound: '/lb',
@@ -14,7 +13,7 @@ const PRICE_LABELS: Record<PricingType, string> = {
 
 export default function CheckoutPage() {
   const {
-    data, addToCart, removeFromCart, updateQuantity,
+    data, addToCart, removeFromCart,
     cartSubtotal, cartTax, cartTotal, cartCount,
     placeOrder, isFree, showUpgrade,
   } = useApp();

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useApp } from "@/lib/context";
-import { PRODUCT_CATEGORIES, PRICING_TYPES } from "@/lib/types";
+import { PRODUCT_CATEGORIES, PRICING_TYPES, Product } from "@/lib/types";
 import Image from "next/image";
 
 export default function CustomerPage() {
@@ -10,11 +10,7 @@ export default function CustomerPage() {
   const { vendor, products } = data;
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [storeUrl, setStoreUrl] = useState("");
-
-  useEffect(() => {
-    setStoreUrl(getCustomerPageUrl());
-  }, [getCustomerPageUrl]);
+  const storeUrl = useMemo(() => getCustomerPageUrl(), [getCustomerPageUrl]);
 
   const filteredProducts = products.filter((p) => {
     if (!p.inStock) return false;
@@ -27,7 +23,6 @@ export default function CustomerPage() {
 
   return (
     <div className="space-y-6">
-      {/* ─── Vendor Banner ─── */}
       <div className="vendor-banner">
         <div className="vendor-banner-content">
           <Image src="/jrt-logo.png" alt="JRT logo" width={48} height={48} style={{ borderRadius: 10 }} />
@@ -39,7 +34,6 @@ export default function CustomerPage() {
         <p className="text-white/80 text-sm mt-2 max-w-xl">{vendor.description}</p>
       </div>
 
-      {/* ─── Market Schedule ─── */}
       <div className="card">
         <div className="card-header">📍 Where to Find Us</div>
         <div className="card-body">
@@ -60,7 +54,6 @@ export default function CustomerPage() {
         </div>
       </div>
 
-      {/* ─── Contact Info ─── */}
       <div className="card">
         <div className="card-header">📞 Contact</div>
         <div className="card-body">
@@ -72,7 +65,6 @@ export default function CustomerPage() {
         </div>
       </div>
 
-      {/* ─── Featured Products ─── */}
       {featured.length > 0 && (
         <div>
           <h2 className="section-header"><span className="emoji">⭐</span> Featured</h2>
@@ -84,11 +76,9 @@ export default function CustomerPage() {
         </div>
       )}
 
-      {/* ─── All Products ─── */}
       <div>
         <h2 className="section-header"><span className="emoji">🥬</span> Fresh Products</h2>
 
-        {/* Search & Filter */}
         <div className="flex flex-wrap gap-2 mb-4">
           <input
             className="input flex-1 min-w-[180px]"
@@ -121,7 +111,6 @@ export default function CustomerPage() {
         )}
       </div>
 
-      {/* ─── Share Store Link ─── */}
       <div className="card">
         <div className="card-header">🔗 Share Your Store</div>
         <div className="card-body">
@@ -152,7 +141,7 @@ export default function CustomerPage() {
   );
 }
 
-function ProductCard({ product, onAdd }: { product: any; onAdd: (p: any) => void }) {
+function ProductCard({ product, onAdd }: { product: Product; onAdd: (p: Product) => void }) {
   const pt = PRICING_TYPES.find((p) => p.value === product.pricingType);
   return (
     <div className="product-card">

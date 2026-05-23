@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useApp } from "@/lib/context";
 import { DAYS_OF_WEEK } from "@/lib/types";
 import { QRCodeSVG } from "qrcode.react";
@@ -9,16 +8,10 @@ import Image from "next/image";
 export default function FlyerPage() {
   const { data, getCustomerPageUrl } = useApp();
   const { vendor } = data;
-  const [storeUrl, setStoreUrl] = useState("");
-
-  // Get dynamic URL on client (works for both here.now and Vercel)
-  useEffect(() => {
-    setStoreUrl(getCustomerPageUrl());
-  }, [getCustomerPageUrl]);
+  const storeUrl = getCustomerPageUrl();
 
   return (
     <div className="flyer-page">
-      {/* ─── Print Button ─── */}
       <div className="no-print" style={{ padding: "16px 0", textAlign: "center", display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
         <button className="btn btn-primary" onClick={() => window.print()}>
           🖨️ Print Flyer
@@ -35,9 +28,7 @@ export default function FlyerPage() {
         </p>
       </div>
 
-      {/* ─── Flyer Content ─── */}
       <div className="flyer-content">
-        {/* Header */}
         <div className="flyer-header">
           <div className="flyer-logo-row">
             <Image src="/jrt-logo.png" alt="JRT logo" width={52} height={52} style={{ borderRadius: 8 }} />
@@ -48,12 +39,10 @@ export default function FlyerPage() {
           </div>
         </div>
 
-        {/* Description */}
         {vendor.description && (
           <p className="flyer-description">{vendor.description}</p>
         )}
 
-        {/* Market Schedule */}
         {vendor.marketSchedules.length > 0 && (
           <div className="flyer-section">
             <h2 className="flyer-section-title">📅 Where to Find Us</h2>
@@ -71,7 +60,6 @@ export default function FlyerPage() {
           </div>
         )}
 
-        {/* Contact */}
         <div className="flyer-section">
           <h2 className="flyer-section-title">📞 Contact Us</h2>
           <div className="flyer-contact">
@@ -80,7 +68,6 @@ export default function FlyerPage() {
           </div>
         </div>
 
-        {/* QR Code */}
         <div className="flyer-qr-section">
           <h2 className="flyer-section-title">🛒 Shop Online — Scan to Order!</h2>
           <div className="flyer-qr-box">
@@ -97,7 +84,6 @@ export default function FlyerPage() {
           <p className="flyer-qr-hint">Scan with your phone camera to browse products & place orders for pickup!</p>
         </div>
 
-        {/* ─── Share Store Link (no-print) ─── */}
         <div className="no-print" style={{ marginTop: 16, textAlign: "center" }}>
           <a href={storeUrl} target="_blank" rel="noopener noreferrer"
             className="btn btn-primary" style={{ textDecoration: "none" }}>
@@ -105,7 +91,6 @@ export default function FlyerPage() {
           </a>
         </div>
 
-        {/* Footer */}
         <div className="flyer-footer">
           <div className="flyer-footer-brand">
             <Image src="/jrt-logo.png" alt="JRT" width={20} height={20} style={{ borderRadius: 4 }} />
@@ -114,7 +99,6 @@ export default function FlyerPage() {
         </div>
       </div>
 
-      {/* ─── Print Styles ─── */}
       <style jsx global>{`
         @media print {
           .no-print, .sidebar, .top-bar, .bottom-nav, .toast { display: none !important; }
@@ -218,40 +202,40 @@ export default function FlyerPage() {
 
         .flyer-qr-box {
           display: inline-block;
-          padding: 12px;
           background: white;
-          border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          margin: 12px 0;
+          padding: 14px;
+          border-radius: 12px;
+          box-shadow: 0 6px 24px rgba(0,0,0,.08);
+          margin: 10px 0;
         }
 
         .flyer-qr-url {
-          font-size: 11px;
-          color: #666;
+          font-size: 12px;
+          color: #444;
+          margin-top: 8px;
           word-break: break-all;
-          margin: 8px 0 4px;
         }
 
         .flyer-qr-hint {
           font-size: 13px;
-          color: var(--brand);
-          font-weight: 600;
+          color: #555;
+          margin-top: 8px;
+          font-weight: 500;
         }
 
         .flyer-footer {
+          margin-top: 24px;
+          padding-top: 14px;
+          border-top: 1px solid #eee;
           text-align: center;
-          margin-top: 20px;
-          padding-top: 12px;
-          border-top: 1px solid #ddd;
         }
 
         .flyer-footer-brand {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          justify-content: center;
-          gap: 6px;
-          font-size: 10px;
-          color: #999;
+          gap: 8px;
+          font-size: 12px;
+          color: #666;
         }
       `}</style>
     </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useApp } from "@/lib/context";
-import { Customer, DAYS_OF_WEEK } from "@/lib/types";
+import { DAYS_OF_WEEK } from "@/lib/types";
 import { wouldExceedLimit } from "@/lib/plan-limits";
 import Link from "next/link";
 

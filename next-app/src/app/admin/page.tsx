@@ -9,7 +9,7 @@ import Link from 'next/link';
 type AdminSection = 'menu' | 'profile' | 'products' | 'customers' | 'payments' | 'data';
 
 export default function AdminPage() {
-  const { data, updateVendor, addProduct, updateProduct, deleteProduct, updateData, changePin, addCustomer, removeCustomer, getCustomerPageUrl, setToast, isFree, showUpgrade, stripeConnect, stripeRefresh, stripeDashboard, stripeTestCheckout, stripeLoading } = useApp();
+  const { data, updateVendor, addProduct, updateProduct, deleteProduct, changePin, addCustomer, removeCustomer, getCustomerPageUrl, setToast, isFree, showUpgrade, stripeConnect, stripeRefresh, stripeDashboard, stripeTestCheckout, stripeLoading } = useApp();
   const { vendor, products, customers } = data;
   const [section, setSection] = useState<AdminSection>('menu');
 

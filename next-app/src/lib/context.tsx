@@ -5,7 +5,7 @@ import {
   AppView, Product, CartItem, Order, OrderStatus, VendorProfile, PaymentMethod, Customer,
 } from "./types";
 import { DEMO_VENDOR, DEMO_PRODUCTS, DEMO_ORDERS } from "./db";
-import { PlanTier, PLAN_LIMITS, STORAGE_KEY_PLAN, wouldExceedLimit, getRemaining } from "./plan-limits";
+import { PlanTier, STORAGE_KEY_PLAN, wouldExceedLimit, getRemaining } from "./plan-limits";
 
 interface StripeState {
   connectedAccountId: string | null;
@@ -337,7 +337,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     // Auto-add customer from order if email provided
-    let newCustomers = [...data.customers];
+    const newCustomers = [...data.customers];
     if (info.email && !data.customers.find(c => c.email === info.email)) {
       newCustomers.push({
         id: `cust${Date.now()}`,

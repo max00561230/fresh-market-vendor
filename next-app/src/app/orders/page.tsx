@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useApp } from '@/lib/context';
-import { OrderStatus, DAYS_OF_WEEK } from '@/lib/types';
+import { OrderStatus } from '@/lib/types';
 
 const STATUS_FLOW: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'ready', 'picked_up'];
 

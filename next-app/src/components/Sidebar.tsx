@@ -16,7 +16,7 @@ const NAV_LINKS = [
 ];
 
 export default function Sidebar() {
-  const { data, lockAdmin, tier, isFree, showUpgrade } = useApp();
+  const { data, lockAdmin, isFree, showUpgrade } = useApp();
   const pathname = usePathname();
   const isAdmin = data.pinUnlocked;
 

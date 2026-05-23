@@ -1,16 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 
-export default function OrderSuccessPage() {
-  const [sessionId, setSessionId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const sid = params.get('session_id');
-    if (sid) setSessionId(sid);
-  }, []);
+function OrderSuccessContent() {
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get('session_id');
 
   return (
     <div className="empty-state">
@@ -27,5 +23,13 @@ export default function OrderSuccessPage() {
         <Link href="/products" className="btn btn-outline">Browse Products</Link>
       </div>
     </div>
+  );
+}
+
+export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={<div className="empty-state"><div className="emoji">⏳</div><p>Loading order details…</p></div>}>
+      <OrderSuccessContent />
+    </Suspense>
   );
 }

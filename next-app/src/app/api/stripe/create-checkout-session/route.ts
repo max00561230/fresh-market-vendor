@@ -120,8 +120,6 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const lineItems: any[] = [];
 
-    let totalCents = 0;
-
     for (const productId of resolvedProductIds) {
       const product = productMap.get(productId);
       if (!product) {
@@ -164,8 +162,6 @@ export async function POST(request: NextRequest) {
         },
         quantity: qty,
       });
-
-      totalCents += unitAmountCents * qty;
     }
 
     if (lineItems.length === 0) {

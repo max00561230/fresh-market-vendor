@@ -18,9 +18,6 @@ function requireEnv(value: string | undefined, name: string): string {
   return value;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type StripeEvent = any;
-
 export async function POST(request: Request) {
   try {
     const signature = (await headers()).get("stripe-signature");

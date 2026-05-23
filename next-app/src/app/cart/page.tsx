@@ -227,7 +227,7 @@ export default function CartPage() {
           )}
           {paymentMethod === 'card' && (
             <p className="text-xs text-[var(--text-muted)]">
-              💳 You'll be redirected to Stripe for secure payment processing.
+              💳 You&apos;ll be redirected to Stripe for secure payment processing.
             </p>
           )}
         </div>
