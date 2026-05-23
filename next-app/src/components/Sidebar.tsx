@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { href: "/", label: "Shop", emoji: "🛒" },
   { href: "/customer", label: "My Store", emoji: "🏪" },
   { href: "/flyer", label: "QR / Flyer", emoji: "📄" },
-  { href: "/manage-customers", label: "Customer List", emoji: "👥", protected: true },
+  { href: "/manage-customers", label: "Customer List", emoji: "👥" },
   { href: "/orders", label: "Orders", emoji: "📋", protected: true },
   { href: "/checkout", label: "Checkout", emoji: "💰", protected: true },
   { href: "/admin", label: "Admin", emoji: "⚙️", protected: true },
