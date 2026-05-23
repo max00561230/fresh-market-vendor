@@ -1,16 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useApp } from "@/lib/context";
 import { PRODUCT_CATEGORIES, PRICING_TYPES } from "@/lib/types";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function CustomerPage() {
-  const { data, addToCart, cartCount, cartTotal } = useApp();
+  const { data, addToCart, cartCount, cartTotal, getCustomerPageUrl } = useApp();
   const { vendor, products } = data;
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [storeUrl, setStoreUrl] = useState("");
+
+  useEffect(() => {
+    setStoreUrl(getCustomerPageUrl());
+  }, [getCustomerPageUrl]);
 
   const filteredProducts = products.filter((p) => {
     if (!p.inStock) return false;
@@ -115,6 +120,34 @@ export default function CustomerPage() {
         {filteredProducts.length === 0 && (
           <p className="text-sm text-[var(--text-muted)] text-center py-8">No products found.</p>
         )}
+      </div>
+
+      {/* ─── Share Store Link ─── */}
+      <div className="card">
+        <div className="card-header">🔗 Share Your Store</div>
+        <div className="card-body">
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-[var(--text-muted)]">Share this link with customers so they can browse and order online.</p>
+            <div className="flex gap-2">
+              <input
+                className="input flex-1"
+                value={storeUrl}
+                readOnly
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+              />
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  if (storeUrl) {
+                    navigator.clipboard.writeText(storeUrl).then(() => alert("Store link copied! ✅"));
+                  }
+                }}
+              >
+                📋 Copy
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ─── Floating Cart Link ─── */}

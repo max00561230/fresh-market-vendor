@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 const NAV_ITEMS = [
   { href: "/", label: "Shop", emoji: "🛒" },
   { href: "/customer", label: "Store", emoji: "🏪" },
+  { href: "/flyer", label: "QR", emoji: "📄" },
   { href: "/orders", label: "Orders", emoji: "📋", protected: true },
   { href: "/checkout", label: "POS", emoji: "💰", protected: true },
   { href: "/admin", label: "Admin", emoji: "⚙️", protected: true },

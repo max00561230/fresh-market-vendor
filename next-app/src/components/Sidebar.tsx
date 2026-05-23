@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 const NAV_LINKS = [
   { href: "/", label: "Shop", emoji: "🛒" },
   { href: "/customer", label: "My Store", emoji: "🏪" },
+  { href: "/flyer", label: "QR / Flyer", emoji: "📄" },
   { href: "/customers", label: "Customers", emoji: "👥", protected: true },
   { href: "/orders", label: "Orders", emoji: "📋", protected: true },
   { href: "/checkout", label: "Checkout", emoji: "💰", protected: true },

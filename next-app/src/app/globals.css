@@ -146,12 +146,20 @@ body {
   .topbar { display: flex; }
   nav.bottom-nav { display: flex; }
 }
+@media (max-width: 380px) {
+  nav.bottom-nav { padding: 2px 0; }
+  .bottom-link { padding: 2px 3px; font-size: .55rem; }
+}
 .topbar { display: none; position: sticky; top: 0; z-index: 40; background: var(--bg-dark); color: #fff; padding: 12px 16px; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,.08); }
 nav.bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-dark); border-top: 1px solid rgba(255,255,255,.08); z-index: 40; padding: 4px 0; }
 nav.bottom-nav .nav-items { display: flex; justify-content: space-around; }
-.bottom-link { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 8px; color: #9ca3af; text-decoration: none; font-size: .65rem; font-weight: 600; border-radius: 6px; transition: all .15s; }
+.bottom-link { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 6px; color: #9ca3af; text-decoration: none; font-size: .6rem; font-weight: 600; border-radius: 6px; transition: all .15s; min-width: 0; }
 .bottom-link:hover { color: #fff; }
-.bottom-link .icon { font-size: 1.2rem; }
+.bottom-link .icon { font-size: 1.15rem; line-height: 1; }
+@media (max-width: 360px) {
+  .bottom-link { padding: 3px 4px; font-size: .55rem; }
+  .bottom-link .icon { font-size: 1rem; }
+}
 
 /* ─── Cards ─── */
 .card {

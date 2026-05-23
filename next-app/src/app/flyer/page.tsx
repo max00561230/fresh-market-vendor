@@ -18,10 +18,17 @@ export default function FlyerPage() {
 
   return (
     <div className="flyer-page">
-      {/* Print Button — hidden in print */}
-      <div className="no-print" style={{ padding: "16px 0", textAlign: "center" }}>
+      {/* ─── Print Button ─── */}
+      <div className="no-print" style={{ padding: "16px 0", textAlign: "center", display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
         <button className="btn btn-primary" onClick={() => window.print()}>
           🖨️ Print Flyer
+        </button>
+        <button className="btn btn-outline" onClick={() => {
+          if (storeUrl) {
+            navigator.clipboard.writeText(storeUrl).then(() => alert("Store link copied! ✅"));
+          }
+        }}>
+          📋 Copy Store Link
         </button>
         <p className="text-xs text-[var(--text-muted)] mt-2">
           Print this flyer and post it at your market stand so customers can scan the QR code to shop online.
@@ -88,6 +95,14 @@ export default function FlyerPage() {
           </div>
           <p className="flyer-qr-url">{storeUrl}</p>
           <p className="flyer-qr-hint">Scan with your phone camera to browse products & place orders for pickup!</p>
+        </div>
+
+        {/* ─── Share Store Link (no-print) ─── */}
+        <div className="no-print" style={{ marginTop: 16, textAlign: "center" }}>
+          <a href={storeUrl} target="_blank" rel="noopener noreferrer"
+            className="btn btn-primary" style={{ textDecoration: "none" }}>
+            🏪 Open My Store Page
+          </a>
         </div>
 
         {/* Footer */}
