@@ -60,7 +60,6 @@ function LayoutShell({ children }: { children: ReactNode }) {
       <div className="app-shell">
         {/* Minimal topbar for customer view */}
         <header className="topbar" style={{ display: "flex" }}>
-          <img src="/jrt-logo.png" alt="JRT" style={{ width: 28, height: 28, borderRadius: 6 }} />
           <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>{data.vendor.farmName}</span>
           <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#d4a843", fontWeight: 600 }}>
             Fresh Market
