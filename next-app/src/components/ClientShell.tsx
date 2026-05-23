@@ -1,12 +1,14 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { AppProvider, useApp } from "@/lib/context";
 import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import PinLock from "@/components/PinLock";
 import UpgradePrompt from "@/components/UpgradePrompt";
+import CustomerCart from "@/components/CustomerCart";
 import { useState, ReactNode } from "react";
 
 const PROTECTED_PATHS = ["/admin", "/checkout", "/orders", "/customers"];
@@ -45,7 +47,7 @@ function UpgradeModal() {
 }
 
 function LayoutShell({ children }: { children: ReactNode }) {
-  const { data } = useApp();
+  const { data, cartCount } = useApp();
   const pathname = usePathname();
 
   // Determine if this is a public customer-facing page (no admin unlocked)
@@ -54,8 +56,11 @@ function LayoutShell({ children }: { children: ReactNode }) {
     p === "/" ? pathname === "/" : pathname === p || pathname.startsWith(p + "/")
   );
 
-  // If on a public page and NOT in admin mode, show clean customer layout
+  // If on a public page and NOT in admin mode, show clean customer layout with cart sidebar
   if (isPublicPage && !isAdmin) {
+    // Pages that should show the cart sidebar (shop pages)
+    const showCart = pathname === "/" || pathname === "/customer" || pathname === "/products";
+
     return (
       <div className="app-shell">
         {/* Minimal topbar for customer view */}
@@ -66,27 +71,47 @@ function LayoutShell({ children }: { children: ReactNode }) {
           </span>
         </header>
         <main className="main-content">
-          {children}
+          {showCart ? (
+            <div className="customer-layout">
+              <div className="customer-layout-main">
+                {children}
+              </div>
+              <CustomerCart />
+            </div>
+          ) : (
+            <>{children}</>
+          )}
           <footer className="app-footer">
             <img src="/jrt-logo.png" alt="JRT" className="app-footer-logo" />
             <span>Powered by <strong>Jade Rose Technology</strong></span>
           </footer>
         </main>
-        {/* Customer-only bottom nav: Shop, Store, QR */}
+        {/* Customer-only bottom nav: Shop, Store, QR, Cart */}
         <nav className="bottom-nav">
           <div className="nav-items">
-            <a href="/" className={`bottom-link ${pathname === "/" ? "active" : ""}`}>
+            <Link href="/" className={`bottom-link ${pathname === "/" ? "active" : ""}`}>
               <span className="icon">🛒</span>
               <span>Shop</span>
-            </a>
-            <a href="/customer" className={`bottom-link ${pathname === "/customer" ? "active" : ""}`}>
+            </Link>
+            <Link href="/customer" className={`bottom-link ${pathname === "/customer" ? "active" : ""}`}>
               <span className="icon">🏪</span>
               <span>Store</span>
-            </a>
-            <a href="/flyer" className={`bottom-link ${pathname === "/flyer" ? "active" : ""}`}>
+            </Link>
+            <Link href="/flyer" className={`bottom-link ${pathname === "/flyer" ? "active" : ""}`}>
               <span className="icon">📄</span>
               <span>QR</span>
-            </a>
+            </Link>
+            <Link href="/cart" className={`bottom-link ${pathname === "/cart" ? "active" : ""}`}>
+              <span className="icon" style={{ position: "relative" }}>
+                🛍️
+                {cartCount > 0 && (
+                  <span className="badge" style={{ position: "absolute", top: -4, right: -6, fontSize: "0.55rem", padding: "0 4px", minWidth: 16, height: 16 }}>
+                    {cartCount}
+                  </span>
+                )}
+              </span>
+              <span>Cart</span>
+            </Link>
           </div>
         </nav>
       </div>

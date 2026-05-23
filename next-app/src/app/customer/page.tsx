@@ -4,10 +4,9 @@ import { useState, useEffect } from "react";
 import { useApp } from "@/lib/context";
 import { PRODUCT_CATEGORIES, PRICING_TYPES } from "@/lib/types";
 import Image from "next/image";
-import Link from "next/link";
 
 export default function CustomerPage() {
-  const { data, addToCart, cartCount, cartTotal, getCustomerPageUrl } = useApp();
+  const { data, addToCart, getCustomerPageUrl } = useApp();
   const { vendor, products } = data;
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -149,16 +148,6 @@ export default function CustomerPage() {
           </div>
         </div>
       </div>
-
-      {/* ─── Floating Cart Link ─── */}
-      {cartCount > 0 && (
-        <Link
-          href="/cart"
-          className="fixed bottom-20 right-4 bg-[var(--brand)] text-white rounded-full px-4 py-3 shadow-lg flex items-center gap-2 z-40 hover:bg-[var(--brand-mid)] transition-colors"
-        >
-          🛒 {cartCount} items · ${cartTotal.toFixed(2)}
-        </Link>
-      )}
     </div>
   );
 }
