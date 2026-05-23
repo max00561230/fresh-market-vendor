@@ -91,15 +91,20 @@ function loadState(): AppState {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
+      // Restore pinUnlocked from sessionStorage (survives page reloads within session)
+      let pinUnlocked = false;
+      try { pinUnlocked = sessionStorage.getItem("fmv_pin_unlocked") === "true"; } catch {}
       return {
         ...parsed,
         view: parsed.view || "customer",
         customers: parsed.customers || [],
         adminPin: parsed.adminPin || DEFAULT_PIN,
-        pinUnlocked: false, // Always start locked
+        pinUnlocked,
       };
     }
   } catch { /* ignore */ }
+  let pinUnlocked = false;
+  try { pinUnlocked = sessionStorage.getItem("fmv_pin_unlocked") === "true"; } catch {}
   return {
     view: "customer",
     vendor: DEMO_VENDOR,
@@ -108,7 +113,7 @@ function loadState(): AppState {
     cart: [],
     customers: [],
     adminPin: DEFAULT_PIN,
-    pinUnlocked: false,
+    pinUnlocked,
   };
 }
 
@@ -197,6 +202,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const verifyPin = useCallback((pin: string) => {
     if (pin === data.adminPin) {
       setData((prev) => ({ ...prev, pinUnlocked: true }));
+      try { sessionStorage.setItem("fmv_pin_unlocked", "true"); } catch {}
       return true;
     }
     return false;
@@ -208,11 +214,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       saveState(next);
       return next;
     });
+    try { sessionStorage.setItem("fmv_pin_unlocked", "true"); } catch {}
     setToast("PIN changed ✅");
   }, [setToast]);
 
   const lockAdmin = useCallback(() => {
     setData((prev) => ({ ...prev, pinUnlocked: false }));
+    try { sessionStorage.removeItem("fmv_pin_unlocked"); } catch {}
   }, []);
 
   // ─── Cart ───
