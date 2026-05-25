@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useApp } from '@/lib/context';
 import { OrderStatus } from '@/lib/types';
+import { PLAN_LIMITS } from '@/lib/plan-limits';
 
 const STATUS_FLOW: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'ready', 'picked_up'];
 
@@ -42,7 +43,7 @@ export default function OrdersPage() {
       <div className="section-header">
         <span className="emoji">📋</span>
         <h2>Orders</h2>
-        <span className="badge">{orders.length}{isFree ? ' / 3' : ''}</span>
+        <span className="badge">{orders.length}{isFree ? ` / ${PLAN_LIMITS.free.orders}` : ''}</span>
       </div>
 
       {/* Filter Tabs */}

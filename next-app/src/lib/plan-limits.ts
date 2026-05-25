@@ -1,6 +1,6 @@
-// ─── Fresh Market Vendor App (FMV1.0) — Free Trial Limits ───
-// Same pattern as LawnCare Manager: 3 customers, 3 products, 3 orders on free plan
-// Custom build unlocks unlimited everything
+// Fresh Market Vendor App (FMV1.0) - Plan Limits
+
+import { FREE_DEMO_PLAN } from "./plans/free-demo-plan";
 
 export type PlanTier = 'free' | 'full';
 
@@ -8,18 +8,24 @@ export interface PlanLimit {
   customers: number | null;   // null = unlimited
   products: number | null;     // null = unlimited
   orders: number | null;       // null = unlimited
+  marketSchedules: number | null;
+  featuredProducts: number | null;
 }
 
 export const PLAN_LIMITS: Record<PlanTier, PlanLimit> = {
   free: {
-    customers: 3,
-    products: 3,
-    orders: 3,
+    customers: FREE_DEMO_PLAN.limits.customers,
+    products: FREE_DEMO_PLAN.limits.products,
+    orders: FREE_DEMO_PLAN.limits.orders,
+    marketSchedules: FREE_DEMO_PLAN.limits.marketSchedules,
+    featuredProducts: FREE_DEMO_PLAN.limits.featuredProducts,
   },
   full: {
     customers: null,  // unlimited
     products: null,   // unlimited
     orders: null,     // unlimited
+    marketSchedules: null,
+    featuredProducts: null,
   },
 };
 

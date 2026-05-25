@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { PLAN_LIMITS } from '@/lib/plan-limits';
+import { FREE_DEMO_PLAN, getFreeDemoUpgradeMessage } from '@/lib/plans/free-demo-plan';
 
 interface UpgradePromptProps {
   resource?: string;
@@ -10,14 +11,15 @@ interface UpgradePromptProps {
 }
 
 const FEATURE_ROWS = [
-  { label: 'Customers', free: '3', full: 'Unlimited' },
-  { label: 'Products', free: '3', full: 'Unlimited' },
-  { label: 'Orders', free: '3', full: 'Unlimited' },
-  { label: 'POS Checkout', free: '✅', full: '✅' },
-  { label: 'QR Flyer', free: '✅', full: '✅' },
-  { label: 'Customer Emails', free: '✅', full: '✅' },
-  { label: 'Branding', free: 'Template', full: 'Custom' },
-  { label: 'Support', free: '30 days', full: 'Priority' },
+  { label: 'Customers', free: String(FREE_DEMO_PLAN.limits.customers), full: 'Unlimited' },
+  { label: 'Products', free: String(FREE_DEMO_PLAN.limits.products), full: 'Unlimited' },
+  { label: 'Orders', free: String(FREE_DEMO_PLAN.limits.orders), full: 'Unlimited' },
+  { label: 'Market Schedules', free: String(FREE_DEMO_PLAN.limits.marketSchedules), full: 'Unlimited' },
+  { label: 'Featured Products', free: String(FREE_DEMO_PLAN.limits.featuredProducts), full: 'Unlimited' },
+  { label: 'POS Checkout', free: 'Demo', full: 'Live' },
+  { label: 'QR Flyer', free: 'Demo', full: 'Live' },
+  { label: 'Branding', free: 'Demo', full: 'Custom' },
+  { label: 'Export', free: 'Locked', full: 'Included' },
 ];
 
 export default function UpgradePrompt({ resource, onClose, onActivate }: UpgradePromptProps) {
@@ -55,14 +57,14 @@ export default function UpgradePrompt({ resource, onClose, onActivate }: Upgrade
         {/* Header */}
         <div style={{ background: 'linear-gradient(135deg, #7f1d1d 0%, #b91c1c 50%, #7f1d1d 100%)' }} className="rounded-t-2xl p-6 text-white text-center">
           <div className="text-4xl mb-2">👑</div>
-          <h2 className="text-xl font-bold">Upgrade to Full Version</h2>
-          <p className="text-sm mt-1 opacity-90">Fresh Market Vendor — Custom Build</p>
+          <h2 className="text-xl font-bold">{FREE_DEMO_PLAN.upgradeLabel}</h2>
+          <p className="text-sm mt-1 opacity-90">Fresh Market Vendor - Full Vendor Plan</p>
         </div>
 
         {/* Limit Warning */}
         {resourceLabel && (
           <div className="mx-4 mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm text-center">
-            ⚠️ You&apos;ve reached the {PLAN_LIMITS.free[resource as keyof typeof PLAN_LIMITS.free]} {resourceLabel.toLowerCase()} limit on your Free Plan.
+            {getFreeDemoUpgradeMessage(resource)} Limit: {PLAN_LIMITS.free[resource as keyof typeof PLAN_LIMITS.free]} {resourceLabel.toLowerCase()}.
           </div>
         )}
 
@@ -72,7 +74,7 @@ export default function UpgradePrompt({ resource, onClose, onActivate }: Upgrade
           <div className="rounded-lg overflow-hidden border border-gray-200">
             <div className="grid grid-cols-3 text-xs font-semibold bg-gray-50">
               <div className="p-2 text-left">Feature</div>
-              <div className="p-2 text-center text-gray-500">Free</div>
+              <div className="p-2 text-center text-gray-500">Free Demo</div>
               <div className="p-2 text-center" style={{ color: '#b91c1c' }}>Full</div>
             </div>
             {FEATURE_ROWS.map((row) => (

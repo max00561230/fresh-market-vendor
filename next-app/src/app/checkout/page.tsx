@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useApp } from '@/lib/context';
 import { PaymentMethod, PricingType } from '@/lib/types';
+import { wouldExceedLimit } from '@/lib/plan-limits';
 
 const PRICE_LABELS: Record<PricingType, string> = {
   per_pound: '/lb',
@@ -44,8 +45,8 @@ export default function CheckoutPage() {
 
   const handleCompleteSale = async () => {
     if (cart.length === 0) return;
-    // Free plan order limit check
-    if (isFree && orders.length >= 3) {
+    // Free Demo order limit check
+    if (isFree && wouldExceedLimit('orders', orders.length, 'free')) {
       showUpgrade('orders');
       return;
     }

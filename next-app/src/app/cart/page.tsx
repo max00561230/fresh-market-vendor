@@ -90,7 +90,7 @@ export default function CartPage() {
 
   const handleSubmit = () => {
     if (!name.trim()) return;
-    // Free plan order limit check
+    // Free Demo order limit check
     if (isFree && wouldExceedLimit('orders', orders.length, 'free')) {
       showUpgrade('orders');
       return;

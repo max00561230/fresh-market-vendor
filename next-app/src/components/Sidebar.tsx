@@ -37,7 +37,7 @@ export default function Sidebar() {
           style={{ background: 'rgba(180, 83, 9, 0.15)', color: '#d97706', border: '1px solid rgba(180, 83, 9, 0.3)' }}
           onClick={() => showUpgrade('general')}
         >
-          👑 Free Plan — Upgrade
+          👑 Free Demo - Upgrade
         </button>
       ) : (
         <div className="mt-2 px-3 py-2 rounded-lg text-xs font-semibold text-center" style={{ background: 'rgba(22, 163, 74, 0.1)', color: '#16a34a', border: '1px solid rgba(22, 163, 74, 0.2)' }}>

@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useApp } from '@/lib/context';
 import { PRODUCT_CATEGORIES, PRICING_TYPES, PricingType, Product, DAYS_OF_WEEK } from '@/lib/types';
-import { wouldExceedLimit } from '@/lib/plan-limits';
+import { PLAN_LIMITS, wouldExceedLimit } from '@/lib/plan-limits';
+import { FREE_DEMO_PLAN } from '@/lib/plans/free-demo-plan';
 import Link from 'next/link';
 
 type AdminSection = 'menu' | 'profile' | 'products' | 'customers' | 'payments' | 'data';
@@ -177,6 +178,15 @@ export default function AdminPage() {
             <span className="emoji">⚙️</span>
             <h2>Admin Dashboard</h2>
           </div>
+
+          {isFree && (
+            <div className="card" style={{ borderColor: '#f59e0b', borderWidth: 1 }}>
+              <div className="card-body">
+                <p className="text-sm font-bold" style={{ color: '#b45309' }}>{FREE_DEMO_PLAN.bannerTitle}</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">{FREE_DEMO_PLAN.bannerMessage}</p>
+              </div>
+            </div>
+          )}
 
           {/* Quick Links to other app pages */}
           <div className="card">
@@ -411,7 +421,7 @@ export default function AdminPage() {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-[var(--text-muted)]">
-              {products.length}{isFree ? ` / ${3}` : ''} products
+              {products.length}{isFree ? ` / ${PLAN_LIMITS.free.products}` : ''} products
             </span>
             <button className="btn btn-primary btn-sm" onClick={openNewProduct}>+ Add Product</button>
           </div>

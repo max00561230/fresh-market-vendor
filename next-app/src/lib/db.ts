@@ -2,6 +2,7 @@
 // This is demo/placeholder data. In production, vendor data comes from Supabase.
 
 import { Product, VendorProfile, Order } from "./types";
+import { buildFreeDemoProducts } from "./plans/free-demo-plan";
 
 export const DEMO_VENDOR: VendorProfile = {
   id: "v1",
@@ -26,18 +27,7 @@ export const DEMO_VENDOR: VendorProfile = {
   ],
 };
 
-export const DEMO_PRODUCTS: Product[] = [
-  { id: "p1", name: "Heirloom Tomatoes", category: "produce", description: "Vine-ripened, bursting with flavor. Perfect for salads.", pricingType: "per_pound", pricePerUnit: 3.49, unitLabel: "lb", emoji: "🍅", inStock: true, isFeatured: true },
-  { id: "p2", name: "Free-Range Eggs", category: "eggs", description: "Pasture-raised, rich golden yolks.", pricingType: "per_dozen", pricePerUnit: 4.50, unitLabel: "doz", emoji: "🥚", inStock: true, isFeatured: true },
-  { id: "p3", name: "Raw Wildflower Honey", category: "honey", description: "Unfiltered, raw honey from our own hives.", pricingType: "per_unit", pricePerUnit: 12.00, unitLabel: "ea", emoji: "🍯", inStock: true, isFeatured: true },
-  { id: "p4", name: "Sweet Corn", category: "produce", description: "Fresh-picked, sweet and tender.", pricingType: "per_bunch", pricePerUnit: 2.00, unitLabel: "bunch", emoji: "🌽", inStock: true, isFeatured: false },
-  { id: "p5", name: "Butternut Squash", category: "produce", description: "Sweet, nutty squash for roasting or soup.", pricingType: "per_pound", pricePerUnit: 1.99, unitLabel: "lb", emoji: "🎃", inStock: true, isFeatured: false },
-  { id: "p6", name: "Fresh Strawberries", category: "fruit", description: "Sun-ripened, hand-picked strawberries.", pricingType: "per_bunch", pricePerUnit: 5.00, unitLabel: "bunch", emoji: "🍓", inStock: true, isFeatured: true },
-  { id: "p7", name: "Watermelon", category: "fruit", description: "Ice-cold, seedless watermelon by the pound.", pricingType: "per_pound", pricePerUnit: 0.69, unitLabel: "lb", emoji: "🍉", inStock: false, isFeatured: false },
-  { id: "p8", name: "Mixed Greens Bag", category: "produce", description: "Mesclun blend of lettuces and baby greens.", pricingType: "per_unit", pricePerUnit: 4.00, unitLabel: "ea", emoji: "🥬", inStock: true, isFeatured: false },
-  { id: "p9", name: "Basil Bunch", category: "herbs", description: "Aromatic Genovese basil, perfect for pesto.", pricingType: "per_bunch", pricePerUnit: 2.50, unitLabel: "bunch", emoji: "🌿", inStock: true, isFeatured: false },
-  { id: "p10", name: "Zucchini", category: "produce", description: "Tender baby zucchini, great for grilling.", pricingType: "per_pound", pricePerUnit: 2.25, unitLabel: "lb", emoji: "🥒", inStock: true, isFeatured: false },
-];
+export const DEMO_PRODUCTS: Product[] = buildFreeDemoProducts();
 
 export const DEMO_ORDERS: Order[] = [
   {
